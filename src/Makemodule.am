@@ -1,0 +1,30 @@
+#this is src/Makemodule.am
+
+#
+#  THE primary Makemodule.am file for nups
+#
+
+
+lib_LTLIBRARIES += libnups.la
+
+nups_sources = \
+	include/nups/nups.hpp \
+	include/nups/solve.hpp \
+	include/nups/factor.hpp \
+	include/type_traits.hpp \
+	src/nups.cpp
+
+
+rootinclude_HEADERS += \
+	include/nups/nups.hpp \
+	include/nups/solve.hpp \
+	include/nups/factor.hpp \
+	include/nups/type_traits.hpp
+
+libnups_la_SOURCES = \
+	$(nups_sources)
+
+
+libnups_la_LIBADD = 
+
+

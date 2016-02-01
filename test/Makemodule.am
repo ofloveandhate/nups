@@ -1,0 +1,12 @@
+#this is test/Makemodule.am
+
+EXTRA_PROGRAMS += nups_test
+TESTS += nups_test
+
+nups_test_SOURCES = \
+	test/nups_test.cpp
+
+nups_test_LDADD = $(BOOST_UNIT_TEST_FRAMEWORK_LIB) libnups.la
+
+nups_test_CXXFLAGS = $(BOOST_CPPFLAGS)
+
