@@ -61,6 +61,7 @@ namespace nups {
 			static void SolveNoComplex(std::vector<SolnT>& solutions, std::vector<CoeffT> const& coefficients)
 			{
 				assert( !TypeTraits<SolnT>::IsComplex && TypeTraits<CoeffT>::IsComplex && "NUPS: sorry, cannot solve when coefficients are complex but output is real");
+				assert(false && "No-complex solving not implemented yet!");
 			}
 
 
@@ -179,7 +180,7 @@ namespace nups {
 		template< template<class> class PredictorT = nups::predict::RK4>
 		struct Octic : public SolverBase<8, Octic< PredictorT > >
 		{
-			typedef PredictorT<OcticLinearSolver> Predictor;
+			typedef PredictorT<OcticLinear> Predictor;
 
 			template<typename SolnT, typename CoeffT>
 			static void SolveWithComplexMonic(std::vector<SolnT>& solutions, std::vector<CoeffT> const& coefficients)
@@ -208,36 +209,36 @@ namespace nups {
 		}; // Octic
 
 
-		// template<template<class> class PredictorT>
-		// struct Decic : public SolverBase<10, Decic<PredictorT<DecicLinearSolver> > >
-		// {
-		// 	typedef PredictorT<OcticLinearSolver> Predictor;
+		template<template<class> class PredictorT>
+		struct Decic : public SolverBase<10, Decic<PredictorT> >
+		{
+			typedef PredictorT<DecicLinear> Predictor;
 
-		// 	template<typename SolnT, typename CoeffT>
-		// 	static void SolveWithComplexMonic(std::vector<SolnT>& solutions, std::vector<CoeffT> const& coefficients)
-		// 	{	
+			template<typename SolnT, typename CoeffT>
+			static void SolveWithComplexMonic(std::vector<SolnT>& solutions, std::vector<CoeffT> const& coefficients)
+			{	
 
-		// 		if (coefficients.size()!=10)
-		// 			throw std::runtime_error("solving a monic degree 10 polynomial requires 10 coefficients.");
+				if (coefficients.size()!=10)
+					throw std::runtime_error("solving a monic degree 10 polynomial requires 10 coefficients.");
 
-		// 		std::vector<SolnT> factor_coeffs_1, factor_coeffs_2;
-		// 		factor::Decic::Factor(factor_coeffs_1, factor_coeffs_2, coefficients);
-
-
-		// 		std::vector<SolnT> solns_temp_1, solns_temp_2;
-		// 		solver::Octic<Predictor>::Solve(solns_temp_1, factor_coeffs_1);
-		// 		solver::Quadratic::Solve(solns_temp_2, factor_coeffs_2);
+				std::vector<SolnT> factor_coeffs_1, factor_coeffs_2;
+				factor::Decic::Factor(factor_coeffs_1, factor_coeffs_2, coefficients);
 
 
-		// 		solutions.resize(10);
-		// 		for (unsigned ii = 0; ii < 8; ++ii)
-		// 			solutions[ii]   = solns_temp_1[ii];
+				std::vector<SolnT> solns_temp_1, solns_temp_2;
+				solver::Octic<PredictorT>::Solve(solns_temp_1, factor_coeffs_1);
+				solver::Quadratic::Solve(solns_temp_2, factor_coeffs_2);
 
-		// 		for (unsigned ii = 0; ii < 2; ++ii)
-		// 			solutions[ii+8] = solns_temp_2[ii];
-		// 	}
 
-		// }; // Decic
+				solutions.resize(10);
+				for (unsigned ii = 0; ii < 8; ++ii)
+					solutions[ii]   = solns_temp_1[ii];
+
+				for (unsigned ii = 0; ii < 2; ++ii)
+					solutions[ii+8] = solns_temp_2[ii];
+			}
+
+		}; // Decic
 
 
 	} // re: namespace nups::solver

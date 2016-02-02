@@ -37,7 +37,7 @@ namespace nups {
 			}
 		};
 
-		struct QuarticDenseLinearSolver : public LinearSolverBase<QuarticDenseLinearSolver>
+		struct QuarticDenseLinear : public LinearSolverBase<QuarticDenseLinear>
 		{
 
 			// instructions on how to solve a dense 4x4 linear system
@@ -146,7 +146,7 @@ namespace nups {
 
 
 
-		struct OcticLinearSolver : public LinearSolverBase<OcticLinearSolver>
+		struct OcticLinear : public LinearSolverBase<OcticLinear>
 		{
 
 			/**
@@ -166,6 +166,29 @@ namespace nups {
 			}
 
 		};
+
+
+		struct DecicLinear : public LinearSolverBase<DecicLinear>
+		{
+
+			/**
+			\brief Solves the linear problem Ax = b, for a special matrix A.
+
+			\param[out] solution The returned value of the solution.
+			\param[in] r The values of the \f$r\f$ variables.
+			\param[in] s The values of the \f$s\f$ variables.
+			\param[in] rhs The right-hand-side of the linear problem being solved.
+
+			In this particular predictor, the matrix A is assumed to have a block structure.  The structure comes from the product \f$r \cdot s\f$, where \f$r\f$ and \f$s\f$ are monic quartic polynomials.  That is, the code here has specific instructions on how to solve the special linear system for the factoring of an octic monic univariate into two monic quartics
+			*/
+			template<typename NumT>
+			static void DoSolve(std::vector<NumT> & solution, std::vector<NumT> const& variables, std::vector<NumT> const& rhs)
+			{
+				
+			}
+
+		};
+
 
 	} // re: solve
 } // re: nups
