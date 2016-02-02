@@ -56,20 +56,22 @@ namespace nups {
 			}
 		};
 		
-
-		struct Octic : FactorizerBase<8,Octic>
+		template<typename PredictorT>
+		struct Octic : public FactorizerBase<8,Octic<PredictorT> >
 		{
 
-			// factors a monic octic univariate polynomial
+			// factors a monic octic univariate polynomial into two quartics.
 			template<typename FT, typename ST>
 			static void DoFactorMonic(std::vector<FT> & coefficients_a, std::vector<FT> & coefficients_b, std::vector<ST> const& coefficients_start)
 			{
 				
 			}
+
+			PredictorT predictor_;
 		};
 
 
-		struct Decic : FactorizerBase<10,Decic>
+		struct Decic : public FactorizerBase<10,Decic>
 		{
 
 			// factors a monic decic univariate polynomial

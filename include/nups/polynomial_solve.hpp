@@ -20,12 +20,14 @@
 
 // declares solvers
 
-#ifndef NUPS_SOLVE_HPP
-#define NUPS_SOLVE_HPP
+#ifndef NUPS_POLYNOMIAL_SOLVE_HPP
+#define NUPS_POLYNOMIAL_SOLVE_HPP
 
 #include <assert.h>
 #include "nups/type_traits.hpp"
 #include "nups/factor.hpp"
+#include "nups/predict.hpp"
+#include "nups/linear_solve.hpp"
 #include <vector>
 
 namespace nups {
@@ -171,13 +173,13 @@ namespace nups {
 				solutions[3] = minus_b_over_four + S - y;
 			}
 
-
-
 		}; // Quadratic
 
 
-		struct Octic : public SolverBase<8, Octic>
+		template< template<class> class PredictorT = nups::predict::RK4>
+		struct Octic : public SolverBase<8, Octic< PredictorT > >
 		{
+			typedef PredictorT<OcticLinearSolver> Predictor;
 
 			template<typename SolnT, typename CoeffT>
 			static void SolveWithComplexMonic(std::vector<SolnT>& solutions, std::vector<CoeffT> const& coefficients)
@@ -187,7 +189,7 @@ namespace nups {
 					throw std::runtime_error("solving a monic degree 8 polynomial requires 8 coefficients.");
 
 				std::vector<SolnT> factor_coeffs_1, factor_coeffs_2;
-				factor::Octic::Factor(factor_coeffs_1, factor_coeffs_2, coefficients);
+				factor::Octic<Predictor>::Factor(factor_coeffs_1, factor_coeffs_2, coefficients);
 
 
 				std::vector<SolnT> solns_temp_1, solns_temp_2;
@@ -206,34 +208,36 @@ namespace nups {
 		}; // Octic
 
 
-		struct Decic : public SolverBase<10, Decic>
-		{
+		// template<template<class> class PredictorT>
+		// struct Decic : public SolverBase<10, Decic<PredictorT<DecicLinearSolver> > >
+		// {
+		// 	typedef PredictorT<OcticLinearSolver> Predictor;
 
-			template<typename SolnT, typename CoeffT>
-			static void SolveWithComplexMonic(std::vector<SolnT>& solutions, std::vector<CoeffT> const& coefficients)
-			{	
+		// 	template<typename SolnT, typename CoeffT>
+		// 	static void SolveWithComplexMonic(std::vector<SolnT>& solutions, std::vector<CoeffT> const& coefficients)
+		// 	{	
 
-				if (coefficients.size()!=10)
-					throw std::runtime_error("solving a monic degree 10 polynomial requires 10 coefficients.");
+		// 		if (coefficients.size()!=10)
+		// 			throw std::runtime_error("solving a monic degree 10 polynomial requires 10 coefficients.");
 
-				std::vector<SolnT> factor_coeffs_1, factor_coeffs_2;
-				factor::Decic::Factor(factor_coeffs_1, factor_coeffs_2, coefficients);
-
-
-				std::vector<SolnT> solns_temp_1, solns_temp_2;
-				solver::Octic::Solve(solns_temp_1, factor_coeffs_1);
-				solver::Quadratic::Solve(solns_temp_2, factor_coeffs_2);
+		// 		std::vector<SolnT> factor_coeffs_1, factor_coeffs_2;
+		// 		factor::Decic::Factor(factor_coeffs_1, factor_coeffs_2, coefficients);
 
 
-				solutions.resize(10);
-				for (unsigned ii = 0; ii < 8; ++ii)
-					solutions[ii]   = solns_temp_1[ii];
+		// 		std::vector<SolnT> solns_temp_1, solns_temp_2;
+		// 		solver::Octic<Predictor>::Solve(solns_temp_1, factor_coeffs_1);
+		// 		solver::Quadratic::Solve(solns_temp_2, factor_coeffs_2);
 
-				for (unsigned ii = 0; ii < 2; ++ii)
-					solutions[ii+8] = solns_temp_2[ii];
-			}
 
-		}; // Decic
+		// 		solutions.resize(10);
+		// 		for (unsigned ii = 0; ii < 8; ++ii)
+		// 			solutions[ii]   = solns_temp_1[ii];
+
+		// 		for (unsigned ii = 0; ii < 2; ++ii)
+		// 			solutions[ii+8] = solns_temp_2[ii];
+		// 	}
+
+		// }; // Decic
 
 
 	} // re: namespace nups::solver

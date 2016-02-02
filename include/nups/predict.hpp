@@ -18,26 +18,51 @@
 // Applied and Computational Mathematics and Statistics
 // danielthebrake@gmail.com
 
-// this is the primary header file for NUPS
+// provides numerical predictor types for NUPS
 
-#ifndef NUPS_HPP
-#define NUPS_HPP
+#ifndef NUPS_PREDICT_HPP
+#define NUPS_PREDICT_HPP
 
-#include "nups/factor.hpp"
-#include "nups/polynomial_solve.hpp"
-#include "nups/linear_solve.hpp"
-#include "nups/predict.hpp"
 
-extern "C"
-{
-	/**
-	\brief Check whether NUPS is available.  
 
-	This function is intended for use with the Autotools, particularly the AC_SEARCH_LIBS command.
+namespace nups {
 
-	\return The character `y`.
-	*/
-	char HaveNUPS();
-}
+	namespace predict {
+
+		template<class PolyT>
+		struct PredictorBase
+		{
+			
+			template<typename NumT>
+			static void Predict(std::vector<NumT> & solution, std::vector<NumT> const& variables, std::vector<NumT> const& rhs)
+			{
+				return PolyT::DoPredict(solution, variables, rhs);
+			}
+		};
+
+
+
+		template<typename LinearSolverT>
+		struct RK4 : public PredictorBase<RK4<LinearSolverT> >
+		{
+
+
+			/**
+			Fourth-order Runge-Kutta predictor, using a linear solver provided as a template type.
+			*/
+			template<typename NumT>
+			static void DoPredict(std::vector<NumT> & solution, std::vector<NumT> const& r, std::vector<NumT> const& s, std::vector<NumT> const& rhs)
+			{
+
+			}
+		};
+
+	} // re: nups::predict
+
+
+} // re: namespace nups
 
 #endif
+
+
+
