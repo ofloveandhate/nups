@@ -54,27 +54,27 @@ namespace nups {
 
 				x.resize(4);
 
-				NumT& a = M[0];
-				NumT& b = M[1];
-				NumT& c = M[2];
-				NumT& d = M[3];
-				NumT& e = M[4];
-				NumT& f = M[5];
-				NumT& g = M[6];
-				NumT& h = M[7];
-				NumT& i = M[8];
-				NumT& j = M[9];
-				NumT& k = M[10];
-				NumT& l = M[11];
-				NumT& m = M[12];
-				NumT& n = M[13];
-				NumT& o = M[14];
-				NumT& p = M[15];
+				const NumT& a = M[0];
+				const NumT& b = M[1];
+				const NumT& c = M[2];
+				const NumT& d = M[3];
+				const NumT& e = M[4];
+				const NumT& f = M[5];
+				const NumT& g = M[6];
+				const NumT& h = M[7];
+				const NumT& i = M[8];
+				const NumT& j = M[9];
+				const NumT& k = M[10];
+				const NumT& l = M[11];
+				const NumT& m = M[12];
+				const NumT& n = M[13];
+				const NumT& o = M[14];
+				const NumT& p = M[15];
 
-				NumT& b1 = B[0];
-				NumT& b2 = B[1];
-				NumT& b3 = B[2];
-				NumT& b4 = B[3];
+				const NumT& b1 = B[0];
+				const NumT& b2 = B[1];
+				const NumT& b3 = B[2];
+				const NumT& b4 = B[3];
 
 				NumT bg = b*g;
 				NumT bh = b*h;
@@ -90,17 +90,16 @@ namespace nups {
 				NumT jo = j*o;
 				NumT kn = k*n;
 
-				NumT D_234 = f*(kp-lo) - g*(jp+ln) + h*(jo-kn);
-				NumT D_134 = b*(kp-lo) - c*(jp+ln) + d*(jo-kn);
-
-				NumT D_124 = (bg-cf)*p - (bh+df)*o + (ch-dg)*n;
-				NumT D_123 = (bg-cf)*l - (bh+df)*k + (ch-dg)*j;
+				NumT D_234 = f*(kp-lo) + g*(ln-jp) + h*(jo-kn);
+				NumT D_134 = b*(kp-lo) + c*(ln-jp) + d*(jo-kn);
+				NumT D_124 = (bg-cf)*p + (df-bh)*o + (ch-dg)*n;
+				NumT D_123 = (bg-cf)*l + (df-bh)*k + (ch-dg)*j;
 
 				NumT det_M = a*D_234 - e*D_134 + i*D_124 - m*D_123;
 
 
-				NumT sub134 = b*(kp-lo) - c*(jp+ln) + d*(jo-kn);
-				NumT sub124 = (bg-cf)*p - (bh+df)*o - (dg+ch)*n;
+				NumT sub134 = b*(kp-lo) + c*(ln-jp) + d*(jo-kn);
+				NumT sub124 = (bg-cf)*p + (df-bh)*o + (ch-dg)*n;
 				NumT sub123 = (bg-cf)*l + (df-bh)*k + (ch-dg)*j;
 				NumT D1 = b1*D_234 - b2*sub134 + b3*sub124 - b4*sub123;
 
@@ -114,8 +113,8 @@ namespace nups {
 				NumT lm = l*m;
 				NumT ip = i*p;
 				NumT 
-				sub234 = e*(kp-lo) - g*(ip+lm) + h*(io-km);
-				sub134 = a*(kp-lo) - c*(ip+lm) + d*(io-km);
+				sub234 = e*(kp-lo) + g*(lm-ip) + h*(io-km);
+				sub134 = a*(kp-lo) + c*(lm-ip) + d*(io-km);
 				sub124 = (ag-ce)*p + (de-ah)*o + (ch-dg)*m;
 				sub123 = (ag-ce)*l + (de-ah)*k + (ch-dg)*i;
 				NumT D2 = -b1*sub234 + b2*sub134 - b3*sub124 + b4*sub123;
@@ -125,14 +124,14 @@ namespace nups {
 				NumT be = b*e;
 				NumT af = a*f;
 
-				sub234 = e*(jp-ln) - f*(ip+lm) + h*(in-jm);
-				sub134 = a*(jp-ln) - b*(ip+lm) + d*(in-jm);
+				sub234 = e*(jp-ln) + f*(lm-ip) + h*(in-jm);
+				sub134 = a*(jp-ln) + b*(lm-ip) + d*(in-jm);
 				sub124 = (af-be)*p + (de-ah)*n + (bh-df)*m;
 				sub123 = (af-be)*l + (de-ah)*j + (bh-df)*i;
 				NumT D3 =  b1*sub234 - b2*sub134 + b3*sub124 - b4*sub123;
 
-				sub234 = e*(jo-kn) - f*(io+km) + g*(in-jm);
-				sub134 = a*(jo-kn) - b*(io+km) + c*(in-jm);
+				sub234 = e*(jo-kn) + f*(km-io) + g*(in-jm);
+				sub134 = a*(jo-kn) + b*(km-io) + c*(in-jm);
 				sub124 = (af-be)*o + (ce-ag)*n + (bg-cf)*m;
 				sub123 = (af-be)*k + (ce-ag)*j + (bg-cf)*i;
 				NumT D4 = -b1*sub234 + b2*sub134 - b3*sub124 + b4*sub123;
