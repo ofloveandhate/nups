@@ -1,5 +1,6 @@
 *.sublime-workspace
 
+generated_documentation
 test-suite.log
 nups_test*
 .dirstamp
