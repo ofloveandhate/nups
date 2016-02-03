@@ -47,6 +47,28 @@ namespace nups
 		typedef double RealType;
 		typedef std::complex<double> ComplexType;
 	};
+
+	template<typename T>
+	struct Random
+	{
+	};
+
+	template<>
+	struct Random<std::complex<double> >
+	{
+		static std::complex<double> Generate()
+		{
+			#ifdef HAVE_CPP_11
+				std::default_random_engine generator;
+				std::uniform_real_distribution<double> distribution(-1.0,1.0);
+				std::complex<double> returnme(distribution(generator), distribution(generator));
+			#else
+				std::complex<double> returnme(2*rand()/RAND_MAX-1,2*rand()/RAND_MAX-1);
+			#endif
+			return returnme / sqrt( abs(returnme));
+		}
+	};
+
 }
 
 #endif

@@ -106,8 +106,50 @@ namespace nups {
 				solutions[0] = (-coefficients[1] + sqrt_discriminant)/2.;
 				solutions[1] = (-coefficients[1] - sqrt_discriminant)/2.;
 			}
+		}; // Quadratic
 
-			// auto delta_0 = c*c - 3*b*d + 12*a*e;
+
+		struct Quartic : public SolverBase<4, Quartic>
+		{
+			template<typename SolnT, typename CoeffT>
+			static void SolveWithComplexMonic(std::vector<SolnT>& solutions, std::vector<CoeffT> const& coefficients)
+			{	
+
+				if (coefficients.size()!=4)
+					throw std::runtime_error("solving a monic degree 4 polynomial requires 4 coefficients.");
+
+				CoeffT one_third = CoeffT(1)/CoeffT(3);
+
+				solutions.resize(4);
+
+				const CoeffT& e = coefficients[0];
+				const CoeffT& d = coefficients[1];
+				const CoeffT& c = coefficients[2];
+				const CoeffT& b = coefficients[3];
+				//a = 1 by assumption
+
+				SolnT delta_0 = c*c - CoeffT(3)*b*d + CoeffT(12)*e;
+				SolnT delta_1 = CoeffT(2)*pow(c,3) - CoeffT(9)*b*c*d + CoeffT(27)*b*b*e + CoeffT(27)*d*d - CoeffT(72)*c*e;
+
+				SolnT p = (CoeffT(8)*c-CoeffT(3)*b*b)/CoeffT(8);
+				SolnT q = (pow(b,3) - CoeffT(4)*b*c + CoeffT(8)*d)/CoeffT(8);
+
+				SolnT Q = pow((delta_1 + sqrt(pow(delta_1,2) - CoeffT(4)*pow(delta_0,3)))/CoeffT(2),one_third);
+				SolnT S = sqrt(CoeffT(-2)/CoeffT(3)*p + one_third*(Q+delta_0/Q))/CoeffT(2);
+
+				SolnT y = sqrt(-CoeffT(4)*S*S - CoeffT(2)*p + q/S)/CoeffT(2);
+
+				SolnT minus_b_over_four = -b/CoeffT(4);
+
+				solutions[0] = minus_b_over_four - S + y;
+				solutions[1] = minus_b_over_four - S - y;
+
+				y = sqrt(-CoeffT(4)*S*S - CoeffT(2)*p - q/S)/CoeffT(2);
+
+				solutions[2] = minus_b_over_four + S + y;
+				solutions[3] = minus_b_over_four + S - y;
+			}
+			//  auto delta_0 = c*c - 3*b*d + 12*a*e;
 			// 	auto delta_1 = 2*pow(c,3) - 9*b*c*d + 27*a*d*d - 72*a*c*e;
 
 			// 	auto Q = pow((delta_1 + sqrt(delta_1*delta_1 - 4*pow(delta_0,3)))/2,one_third);
@@ -128,53 +170,7 @@ namespace nups {
 			// 	solutions[2] = min_b_over_four_a + S + y;
 			// 	solutions[3] = min_b_over_four_a + S - y;
 
-		}; // Quadratic
-
-
-		struct Quartic : public SolverBase<4, Quartic>
-		{
-
-			template<typename SolnT, typename CoeffT>
-			static void SolveWithComplexMonic(std::vector<SolnT>& solutions, std::vector<CoeffT> const& coefficients)
-			{	
-
-				if (coefficients.size()!=4)
-					throw std::runtime_error("solving a monic degree 4 polynomial requires 4 coefficients.");
-
-				CoeffT minus_two_thirds = CoeffT(-2)/CoeffT(3);
-				CoeffT one_third = CoeffT(1)/CoeffT(3);
-
-				solutions.resize(4);
-
-				const CoeffT& e = coefficients[0];
-				const CoeffT& d = coefficients[1];
-				const CoeffT& c = coefficients[2];
-				const CoeffT& b = coefficients[3];
-				//a = 1 by assumption
-
-				SolnT delta_0 = c*c - CoeffT(3)*b*d + CoeffT(12)*e;
-				SolnT delta_1 = CoeffT(2)*pow(c,3) - CoeffT(9)*b*c*d + CoeffT(27)*b*b*e + CoeffT(27)*d*d - CoeffT(72)*c*e;
-
-				SolnT p = (CoeffT(8)*c-CoeffT(3)*b*b)/CoeffT(8);
-				SolnT q = (pow(b,3) - CoeffT(4)*b*c + CoeffT(8)*d)/CoeffT(8);
-
-				SolnT Q = pow((delta_1 + sqrt(pow(delta_1,2) - CoeffT(4)*pow(delta_0,3)))/CoeffT(2),one_third);
-				SolnT S = sqrt(minus_two_thirds*p + one_third*(Q+delta_0/Q))/CoeffT(2);
-
-				SolnT y = sqrt(-CoeffT(4)*S*S - CoeffT(2)*p + q/S)/CoeffT(2);
-
-				SolnT minus_b_over_four = -b/CoeffT(4);
-
-				solutions[0] = minus_b_over_four - S + y;
-				solutions[1] = minus_b_over_four - S - y;
-
-				y = sqrt(-CoeffT(4)*S*S - CoeffT(2)*p - q/S)/CoeffT(2);
-
-				solutions[2] = minus_b_over_four + S + y;
-				solutions[3] = minus_b_over_four + S - y;
-			}
-
-		}; // Quadratic
+		}; // Quartic
 
 
 		template< template<class> class PredictorT = nups::predict::RK4>
@@ -191,7 +187,6 @@ namespace nups {
 
 				std::vector<SolnT> factor_coeffs_1, factor_coeffs_2;
 				factor::Octic<Predictor>::Factor(factor_coeffs_1, factor_coeffs_2, coefficients);
-
 
 				std::vector<SolnT> solns_temp_1, solns_temp_2;
 				solver::Quartic::Solve(solns_temp_1, factor_coeffs_1);

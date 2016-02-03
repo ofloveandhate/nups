@@ -34,9 +34,9 @@ namespace nups {
 		{
 			
 			template<typename NumT>
-			static void Predict(std::vector<NumT> & solution, std::vector<NumT> const& variables, std::vector<NumT> const& rhs)
+			static void Predict(std::vector<NumT> & solution, std::vector<NumT> const& variables, std::vector<NumT> const& rhs, NumT const& t,  NumT const& delta_t)
 			{
-				return PolyT::DoPredict(solution, variables, rhs);
+				return PolyT::DoPredict(solution, variables, rhs, t, delta_t);
 			}
 		};
 
@@ -51,7 +51,7 @@ namespace nups {
 			Fourth-order Runge-Kutta predictor, using a linear solver provided as a template type.
 			*/
 			template<typename NumT>
-			static void DoPredict(std::vector<NumT> & solution, std::vector<NumT> const& r, std::vector<NumT> const& s, std::vector<NumT> const& rhs)
+			static void DoPredict(std::vector<NumT> & solution, std::vector<NumT> const& variables, std::vector<NumT> const& rhs, NumT const& t,  NumT const& delta_t)
 			{
 
 			}
