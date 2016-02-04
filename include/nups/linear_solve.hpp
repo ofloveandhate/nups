@@ -39,7 +39,7 @@ namespace nups {
 
 		struct QuarticDenseLinear : public LinearSolverBase<QuarticDenseLinear>
 		{
-
+			enum {Degree = 4};
 			// instructions on how to solve a dense 4x4 linear system
 			// implemented using Sarrus' rule.
 			//
@@ -148,7 +148,7 @@ namespace nups {
 
 		struct OcticLinear : public LinearSolverBase<OcticLinear>
 		{
-
+			enum {Degree = 8};
 			/**
 			\brief Solves the linear problem Ax = b, for a special matrix A.
 
@@ -258,10 +258,10 @@ namespace nups {
 				//(4, 4) = s0}, datatype = anything, storage = rectangular, order = Fortran_order, shape = [])
 
 				std::vector<NumT> w(16);
-				// w = A^{-1}
+				// w = C A^{-1}
 				w[0] = s0-s1*s3 + s2*z31 + s3*z41;
 				w[1] = s1-s2*s3 + s3*z31;
-				w[2] = -pow(s3,2) + s2;
+				w[2] = -z31;
 				w[3] = s3;
 				//---------------------------------------
 				w[4] = -s0*s3 + s1*z31 + s2*z41;
@@ -284,11 +284,22 @@ namespace nups {
 
 				// the following is a dense matrix times B, with B written in terms of the coefficients r_i and s_i.
 				//
+				//B =
+				// [  1,  0,  0, 0]
+				// [ r3,  1,  0, 0]
+				// [ r2, r3,  1, 0]
+				// [ r1, r2, r3, 1]
 				//
 				// Matrix(4, 4, {(1, 1) = m1*r3+m2*r2+m3*r1+m0, (1, 2) = m2*r3+m3*r2+m1, (1, 3) = m3*r3+m2, (1, 4) = m3, (2, 1) = m5*r3+m6*r2+m7*r1+m4, (2, 2) = m6*r3+m7*r2+m5, (2, 3) = m7*r3+m6, (2, 4) = m7, (3, 1) = m10*r2+m11*r1+m9*r3+m8, (3, 2) = m10*r3+m11*r2+m9, (3, 3) = m11*r3+m10, (3, 4) = m11, (4, 1) = m13*r3+m14*r2+m15*r1+m12, (4, 2) = m14*r3+m15*r2+m13, (4, 3) = m15*r3+m14, (4, 4) = m15}, datatype = anything, storage = rectangular, order = Fortran_order, shape = []
 				//
 				//
+				// M = -C*A_inv*B + D
 
+				// D =
+				// [ r0, r1, r2, r3]
+				// [  0, r0, r1, r2]
+				// [  0,  0, r0, r1]
+				// [  0,  0,  0, r0]
 				std::vector<NumT> M(16);	
 
 				M[0]  = -(w[1]*r3+w[2]*r2+w[3]*r1+w[0])		+ r0;
@@ -349,6 +360,7 @@ namespace nups {
 				const NumT t1 = -y1*r3 + b2-y2;
 				const NumT t2 = -y1*r2 - y2*r3 + b3-y3;
 
+				//      x = A^{-1}(b - B y)
 
 				solution[0] =  b1-y1;
 				solution[1] = -s3*solution[0] - r3*y1+b2-y2;
@@ -361,7 +373,7 @@ namespace nups {
 
 		struct DecicLinear : public LinearSolverBase<DecicLinear>
 		{
-
+			enum {Degree = 10};
 			/**
 			\brief Solves the linear problem Ax = b, for a special matrix A.
 

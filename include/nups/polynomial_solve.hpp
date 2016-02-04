@@ -77,11 +77,13 @@ namespace nups {
 					throw std::runtime_error(error_message.str());
 				}
 
+
+				//re-scale by the leading coefficient, which is the first coefficient by convention
 				if (coefficients.size()==degree+1)
 				{
 					std::vector<CoeffT> re_scaled_coefficients(degree);
 					for (unsigned ii = 0; ii < degree; ++ii)
-						re_scaled_coefficients[ii] = coefficients[ii] / coefficients[degree];
+						re_scaled_coefficients[ii] = coefficients[ii+1] / coefficients[0];
 
 					return PolyT::SolveWithComplexMonic(solutions, re_scaled_coefficients);
 				}
@@ -101,10 +103,10 @@ namespace nups {
 			{	
 				solutions.resize(2);
 
-				SolnT sqrt_discriminant = sqrt(pow(coefficients[1],2) - 4.*coefficients[0]);
+				SolnT sqrt_discriminant = sqrt(pow(coefficients[0],2) - 4.*coefficients[1]);
 
-				solutions[0] = (-coefficients[1] + sqrt_discriminant)/2.;
-				solutions[1] = (-coefficients[1] - sqrt_discriminant)/2.;
+				solutions[0] = (-coefficients[0] + sqrt_discriminant)/2.;
+				solutions[1] = (-coefficients[0] - sqrt_discriminant)/2.;
 			}
 		}; // Quadratic
 
@@ -122,10 +124,11 @@ namespace nups {
 
 				solutions.resize(4);
 
-				const CoeffT& e = coefficients[0];
-				const CoeffT& d = coefficients[1];
-				const CoeffT& c = coefficients[2];
-				const CoeffT& b = coefficients[3];
+				// the leading coefficient, a, is 1 by hypothesis
+				const CoeffT& e = coefficients[3];
+				const CoeffT& d = coefficients[2];
+				const CoeffT& c = coefficients[1];
+				const CoeffT& b = coefficients[0];
 				//a = 1 by assumption
 
 				SolnT delta_0 = c*c - CoeffT(3)*b*d + CoeffT(12)*e;

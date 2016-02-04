@@ -63,13 +63,28 @@ namespace nups
 				std::uniform_real_distribution<double> distribution(-1.0,1.0);
 				std::complex<double> returnme(distribution(generator), distribution(generator));
 			#else
-				std::complex<double> returnme(2*rand()/RAND_MAX-1,2*rand()/RAND_MAX-1);
+				std::complex<double> returnme(2*(double(rand())/RAND_MAX-0.5),2*(double(rand())/RAND_MAX-0.5));
 			#endif
-			return returnme / sqrt( abs(returnme));
+			return returnme / sqrt(abs(returnme));
 		}
 	};
 
+	inline
+	void print_to_screen_matlab(std::vector<std::complex<double> > const& v, std::string const& name)
+	{	
+		std::cout.precision(16);
+		std::cout << name << " = [...\n";
+		for (int ii = 0; ii < v.size(); ii++)
+		{ // print kth coordinate
+			std::cout << real(v[ii]) << "+1i*" << imag(v[ii])<<";\n";
+		}
+		std::cout << "];\n\n";
+	}
+
+
+
 }
+
 
 #endif
 
