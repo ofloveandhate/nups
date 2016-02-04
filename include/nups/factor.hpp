@@ -31,63 +31,206 @@ namespace nups {
 
 	namespace factor {
 
-		template<int degree, typename PolyT>
+		template<typename PolyT>
 		struct FactorizerBase
 		{
 			template<typename NumT>
-			static void Factor(std::vector<NumT> & coefficients_a, std::vector<NumT> & coefficients_b, std::vector<NumT> const& coefficients_start)
+			static void Factor(std::vector<NumT> & coefficients_r, std::vector<NumT> & coefficients_s, std::vector<NumT> const& coefficients_start)
 			{
-				if (coefficients_start.size()!=degree && coefficients_start.size()!=degree+1)
+				if (coefficients_start.size()!=PolyT::Degree && coefficients_start.size()!=PolyT::Degree+1)
 				{
 					std::stringstream error_message;
-					error_message << "factoring a polynomial of degree " << degree << " must have " << degree << " or " << degree+1 << " coefficients.  yours has " << coefficients_start.size();
+					error_message << "factoring a polynomial of PolyT::Degree " << PolyT::Degree << " must have " << PolyT::Degree << " or " << PolyT::Degree+1 << " coefficients.  yours has " << coefficients_start.size();
 					throw std::runtime_error(error_message.str());
 				}
 
-				if (coefficients_start.size()==degree+1)
+				if (coefficients_start.size()==PolyT::Degree+1)
 				{
-					std::vector<NumT> re_scaled_coefficients(degree);
-					for (unsigned ii = 0; ii < degree; ++ii)
-						re_scaled_coefficients[ii] = coefficients_start[ii] / coefficients_start[degree];
+					std::vector<NumT> re_scaled_coefficients(PolyT::Degree);
+					for (unsigned ii = 0; ii < PolyT::Degree; ++ii)
+						re_scaled_coefficients[ii] = coefficients_start[ii] / coefficients_start[PolyT::Degree];
 
-					return PolyT::DoFactorMonic(coefficients_a, coefficients_b, coefficients_start);
+					return PolyT::DoFactorMonic(coefficients_r, coefficients_s, coefficients_start);
 				}
 
-				return PolyT::DoFactorMonic(coefficients_a, coefficients_b, coefficients_start);
+				return PolyT::DoFactorMonic(coefficients_r, coefficients_s, coefficients_start);
 			}
-		};
-		
-		template<typename PredictorT>
-		struct Octic : public FactorizerBase<8,Octic<PredictorT> >
-		{
 
+		private:
 			// factors a monic octic univariate polynomial into two quartics.
 			template<typename NumT>
-			static void DoFactorMonic(std::vector<NumT> & coefficients_a, std::vector<NumT> & coefficients_b, std::vector<NumT> const& a)
+			static void DoFactorMonic(std::vector<NumT> & coefficients_r, std::vector<NumT> & coefficients_s, std::vector<NumT> const& a)
 			{
-				unsigned num_steps = 1000;
+
+				unsigned num_steps = 18;
+				unsigned num_corrects_during = 4;
+				unsigned num_corrects_after = 4;
 
 
-				// first, we make the start point
-				std::vector<NumT> x(8);
-				for (typename std::vector<NumT>::iterator iter=x.begin(); iter!=x.end(); iter++)
-					*iter = nups::Random<NumT>::Generate();
 
 
-				const NumT& r3 = x[0];
-				const NumT& r2 = x[1];
-				const NumT& r1 = x[2];
-				const NumT& r0 = x[3];
 
-				const NumT& s3 = x[4];
-				const NumT& s2 = x[5];
-				const NumT& s1 = x[6];
-				const NumT& s0 = x[7];
+				typename TypeTraits<NumT>::RealType t(1);
+				typename TypeTraits<NumT>::RealType delta_t(typename TypeTraits<NumT>::RealType(-1)/num_steps);
+				std::vector<NumT> delta_x;
+
+				std::vector<NumT> x(PolyT::Degree);
+				std::vector<NumT> a_star(PolyT::Degree);
+				std::vector<NumT> a_star_minus_a(PolyT::Degree);
+				std::vector<NumT> residuals(PolyT::Degree);
 
 
+
+				// make the start point
+				GenerateStartPoint(x);
 
 				// now, we need to feed the start point into the polynomial to generate the random coefficients, a_star  (a^\ast).
-				std::vector<NumT> a_star(8);
+				PolyT::EvaluateF(a_star, x);
+				
+				// we use the vector a^\ast - a as the right hand side during linear solves, so we cache the vector.
+				ComputeA_Star_Minus_A(a_star_minus_a, a_star, a);
+
+				
+
+				
+
+				
+				print_to_screen_matlab(x,"x_start");
+				print_to_screen_matlab(a,"a");
+				print_to_screen_matlab(a_star,"a_star");
+				std::cout << "delta_t: " << delta_t << std::endl;
+
+				
+				for (unsigned n=0; n<num_steps; ++n)
+				{
+					if (1)
+					{
+						std::cout << "\n\ntaking step " << n << ", t: " << t << std::endl;
+						print_to_screen_matlab(x,"x");
+						
+						PolyT::EvaluateHomotopy(residuals, x, a, a_star, t);
+						print_to_screen_matlab(residuals,"residuals");
+						
+					}
+
+					PolyT::Predictor::Predict(delta_x, x, a_star_minus_a, delta_t);
+
+					if (1)
+					{
+						print_to_screen_matlab(delta_x,"delta_x");
+					}
+
+					for (unsigned ii=0; ii<PolyT::Degree; ++ii)
+						x[ii] += delta_x[ii];
+
+					t += delta_t;
+
+					for (unsigned kk=0; kk<num_corrects_during; kk++)
+						Correct(x,a,a_star,t);
+					
+				}
+
+				for (unsigned kk=0; kk<num_corrects_after; kk++)
+					Correct(x,a);
+
+				if (1)
+					print_to_screen_matlab(x,"final_x");
+
+				coefficients_r.resize(PolyT::DegreeFactorR);
+				for (unsigned ii = 0; ii < PolyT::DegreeFactorR; ++ii)
+					coefficients_r[ii] = x[ii];
+
+				coefficients_s.resize(PolyT::DegreeFactorS);
+				for (unsigned ii = 0; ii < PolyT::DegreeFactorS; ++ii)
+					coefficients_s[ii] = x[ii+PolyT::DegreeFactorR];
+			}
+
+
+			template<typename NumT>
+			static void GenerateStartPoint(std::vector<NumT> & rs_start)
+			{
+				for (typename std::vector<NumT>::iterator iter=rs_start.begin(); iter!=rs_start.end(); iter++)
+					*iter = nups::Random<NumT>::Generate();
+			}
+
+			template<typename NumT>
+			static void ComputeA_Star_Minus_A(std::vector<NumT> & a_star_minus_a, std::vector<NumT> & a_star, std::vector<NumT> const& a)
+			{
+				for (unsigned ii=0; ii<PolyT::Degree; ++ii)
+					a_star_minus_a[ii] = a_star[ii] - a[ii];
+			}
+
+
+			template<typename NumT>
+			static void Correct(std::vector<NumT> & x, std::vector<NumT> const& a, std::vector<NumT> const& a_star, typename TypeTraits<NumT>::RealType const& t)
+			{
+				std::vector<NumT> residuals;
+
+				PolyT::EvaluateHomotopy(residuals, x, a, a_star, t);
+
+				for (unsigned ii=0; ii<PolyT::Degree; ++ii)
+					residuals[ii] = -residuals[ii];
+
+				std::vector<NumT> delta_x;
+				PolyT::Predictor::LinSolver::Solve(delta_x, x, residuals);
+				for (unsigned ii=0; ii<PolyT::Degree; ++ii)
+					x[ii] += delta_x[ii];
+			}
+
+			template<typename NumT>
+			static void Correct(std::vector<NumT> & x, std::vector<NumT> const& a)
+			{
+				std::vector<NumT> residuals;
+
+				PolyT::EvaluateHomotopy(residuals, x, a);
+
+				for (unsigned ii=0; ii<PolyT::Degree; ++ii)
+					residuals[ii] = -residuals[ii];
+
+				std::vector<NumT> delta_x;
+				PolyT::Predictor::LinSolver::Solve(delta_x, x, residuals);
+				for (unsigned ii=0; ii<PolyT::Degree; ++ii)
+					x[ii] += delta_x[ii];
+			}
+		}; // re: FactorizerBase
+		
+
+
+
+
+
+
+
+
+
+		template<typename PredictorT>
+		struct Octic : public FactorizerBase<Octic<PredictorT> >
+		{
+			enum {
+				  Degree = 8,
+				  DegreeFactorR = 4,
+				  DegreeFactorS = 4
+				 };
+
+			typedef PredictorT Predictor;
+
+
+			
+
+
+			template<typename NumT>
+			static void EvaluateF(std::vector<NumT> & a_star, std::vector<NumT> const& rs)
+			{
+				const NumT& r3 = rs[0];
+				const NumT& r2 = rs[1];
+				const NumT& r1 = rs[2];
+				const NumT& r0 = rs[3];
+
+				const NumT& s3 = rs[4];
+				const NumT& s2 = rs[5];
+				const NumT& s1 = rs[6];
+				const NumT& s0 = rs[7];
+				
 				//[r3+s3, r3*s3+r2+s2, r2*s3+r3*s2+r1+s1, r1*s3+r2*s2+r3*s1+r0+s0, r0*s3+r1*s2+r2*s1+r3*s0, r0*s2+r1*s1+r2*s0, r0*s1+r1*s0, r0*s0]
 				a_star[0] = r3+s3;
 				a_star[1] = r3*s3+r2+s2;
@@ -97,92 +240,15 @@ namespace nups {
 				a_star[5] = r0*s2+r1*s1+r2*s0;
 				a_star[6] = r0*s1+r1*s0;
 				a_star[7] = r0*s0;
-
-				
-				
-				std::vector<NumT> a_minus_a_star(8);
-				for (unsigned ii=0; ii<8; ++ii)
-					a_minus_a_star[ii] = a[ii] - a_star[ii];
-
-				std::vector<NumT> a_star_minus_a(8);
-				for (unsigned ii=0; ii<8; ++ii)
-					a_star_minus_a[ii] = a_star[ii] - a[ii];
-
-				typename TypeTraits<NumT>::RealType t(1);
-				typename TypeTraits<NumT>::RealType delta_t(typename TypeTraits<NumT>::RealType(-1)/num_steps);
-				std::vector<NumT> delta_x;
-
-				
-				print_to_screen_matlab(x,"x_start");
-				print_to_screen_matlab(a,"a");
-				print_to_screen_matlab(a_star,"a_star");
-				std::cout << "delta_t: " << delta_t << std::endl;
-
-				std::vector<NumT> residuals;
-				for (unsigned n=0; n<num_steps; ++n)
-				{
-					if (0)
-					{
-						std::cout << "\n\ntaking step " << n << ", t: " << t << std::endl;
-						print_to_screen_matlab(x,"x");
-						
-						Evaluate(residuals, x, a, a_star, t);
-						print_to_screen_matlab(residuals,"residuals");
-						
-					}
-
-					PredictorT::Predict(delta_x, x, a_star_minus_a, delta_t);
-
-					if (0)
-					{
-						print_to_screen_matlab(delta_x,"delta_x");
-					}
-
-					for (unsigned ii=0; ii<8; ++ii)
-						x[ii] += delta_x[ii];
-
-					t += delta_t;
-
-					for (unsigned kk=0; kk<2; kk++)
-						Correct(x,a,a_star,t);
-					
-				}
-
-				for (unsigned kk=0; kk<6; kk++)
-					Correct(x,a,a_star,t);
-
-				if (0)
-					print_to_screen_matlab(x,"final_x");
-
-				coefficients_a.resize(4);
-				for (unsigned ii = 0; ii < 4; ++ii)
-					coefficients_a[ii] = x[ii];
-
-				coefficients_b.resize(4);
-				for (unsigned ii = 0; ii < 4; ++ii)
-					coefficients_b[ii] = x[ii+4];
 			}
 
-		private:
+
+
+			
+
 
 			template<typename NumT>
-			static void Correct(std::vector<NumT> & x, std::vector<NumT> const& a, std::vector<NumT> const& a_star, typename TypeTraits<NumT>::RealType const& t)
-			{
-				std::vector<NumT> residuals;
-
-				Evaluate(residuals, x, a, a_star, t);
-
-				for (unsigned ii=0; ii<8; ++ii)
-					residuals[ii] = -residuals[ii];
-
-				std::vector<NumT> delta_x;
-				PredictorT::LinSolver::Solve(delta_x, x, residuals);
-				for (unsigned ii=0; ii<8; ++ii)
-					x[ii] += delta_x[ii];
-			}
-
-			template<typename NumT>
-			static void Evaluate(std::vector<NumT> & f, std::vector<NumT> const& rs, std::vector<NumT> const& a, std::vector<NumT> const& a_star, typename TypeTraits<NumT>::RealType const& t)
+			static void EvaluateHomotopy(std::vector<NumT> & f, std::vector<NumT> const& rs, std::vector<NumT> const& a, std::vector<NumT> const& a_star, typename TypeTraits<NumT>::RealType const& t)
 			{	
 				const NumT& r3 = rs[0];
 				const NumT& r2 = rs[1];
@@ -204,15 +270,47 @@ namespace nups {
 				f[6] = r0*s1+r1*s0 				- (t*a_star[6] + (NumT(1)-t)*a[6]);
 				f[7] = r0*s0 					- (t*a_star[7] + (NumT(1)-t)*a[7]);
 			}
+
+			template<typename NumT>
+			static void EvaluateHomotopy(std::vector<NumT> & f, std::vector<NumT> const& rs, std::vector<NumT> const& a)
+			{	
+				const NumT& r3 = rs[0];
+				const NumT& r2 = rs[1];
+				const NumT& r1 = rs[2];
+				const NumT& r0 = rs[3];
+
+				const NumT& s3 = rs[4];
+				const NumT& s2 = rs[5];
+				const NumT& s1 = rs[6];
+				const NumT& s0 = rs[7];
+
+				f.resize(8);
+				f[0] = r3+s3 					- a[0];
+				f[1] = r3*s3+r2+s2 				- a[1];
+				f[2] = r2*s3+r3*s2+r1+s1 		- a[2];
+				f[3] = r1*s3+r2*s2+r3*s1+r0+s0 	- a[3];
+				f[4] = r0*s3+r1*s2+r2*s1+r3*s0 	- a[4];
+				f[5] = r0*s2+r1*s1+r2*s0 		- a[5];
+				f[6] = r0*s1+r1*s0 				- a[6];
+				f[7] = r0*s0 					- a[7];
+			}
 		};
 
+
+
+
 		//[ r0*s0, r0*s1 + r1*s0, r0*s2 + r1*s1 + r2*s0, r0*s3 + r1*s2 + r2*s1 + r3*s0, r0 + s0 + r1*s3 + r2*s2 + r3*s1, r1 + s1 + r2*s3 + r3*s2, r2 + s2 + r3*s3, r3 + s3, 1]
-		struct Decic : public FactorizerBase<10,Decic>
+		struct Decic : public FactorizerBase<Decic>
 		{
+			enum {
+				  Degree = 10,
+				  DegreeFactorR = 8,
+				  DegreeFactorS = 2
+				 };
 
 			// factors a monic decic univariate polynomial
 			template<typename NumT>
-			static void DoFactorMonic(std::vector<NumT> & coefficients_a, std::vector<NumT> & coefficients_b, std::vector<NumT> const& coefficients_start)
+			static void DoFactorMonic(std::vector<NumT> & coefficients_r, std::vector<NumT> & coefficients_s, std::vector<NumT> const& coefficients_start)
 			{
 			}
 		};
