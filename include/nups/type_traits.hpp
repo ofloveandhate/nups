@@ -33,6 +33,24 @@ namespace nups
 	};
 
 	template<>
+	struct NumTraits<float>
+	{
+		enum {IsComplex = 0};
+		typedef float RealType;
+		typedef std::complex<float> ComplexType;
+	};
+
+	template<>
+	struct NumTraits<std::complex<float> >
+	{
+		enum {IsComplex = 1};
+		typedef float RealType;
+		typedef std::complex<float> ComplexType;
+	};
+
+
+
+	template<>
 	struct NumTraits<double>
 	{
 		enum {IsComplex = 0};
@@ -52,6 +70,32 @@ namespace nups
 	struct Random
 	{
 	};
+
+	template<>
+	struct Random<float>
+	{
+		static float Generate()
+		{
+			return 2*(float(rand())/RAND_MAX-0.5);
+		}
+	};
+
+	template<>
+	struct Random<std::complex<float> >
+	{
+		static std::complex<float> Generate()
+		{
+			#ifdef HAVE_CPP_11
+				std::default_random_engine generator;
+				std::uniform_real_distribution<float> distribution(-1.0,1.0);
+				std::complex<float> returnme(distribution(generator), distribution(generator));
+			#else
+				std::complex<float> returnme(2*(float(rand())/RAND_MAX-0.5),2*(float(rand())/RAND_MAX-0.5));
+			#endif
+			return returnme / float(sqrt(abs(returnme)));
+		}
+	};
+
 
 	template<>
 	struct Random<double>

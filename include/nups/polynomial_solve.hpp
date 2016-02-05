@@ -216,12 +216,12 @@ namespace nups {
 				const CoeffT& b = coefficients[3];
 
 				CoeffT delta_0 = c*c - Real(3)*b*d + Real(12)*e;
-				CoeffT delta_1 = Real(2)*pow(c,3) - Real(9)*b*c*d + Real(27)*b*b*e + Real(27)*d*d - Real(72)*c*e;
+				CoeffT delta_1 = Real(2)*c*c*c - Real(9)*b*c*d + Real(27)*b*b*e + Real(27)*d*d - Real(72)*c*e;
 
 				CoeffT p = (Real(8)*c-Real(3)*b*b)/Real(8);
-				CoeffT q = (pow(b,3) - Real(4)*b*c + Real(8)*d)/Real(8);
+				CoeffT q = (b*b*b - Real(4)*b*c + Real(8)*d)/Real(8);
 
-				CoeffT Q = pow((delta_1 + sqrt(pow(delta_1,2) - Real(4)*pow(delta_0,3)))/Real(2),one_third);
+				CoeffT Q = pow((delta_1 + sqrt(delta_1*delta_1 - Real(4)*delta_0*delta_0*delta_0))/Real(2),one_third);
 				CoeffT S = sqrt(Real(-2)/Real(3)*p + one_third*(Q+delta_0/Q))/Real(2);
 
 				CoeffT y = sqrt(-Real(4)*S*S - Real(2)*p + q/S)/Real(2);
