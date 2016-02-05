@@ -34,7 +34,7 @@ namespace nups {
 		{
 			
 			template<typename NumT>
-			static void Predict(std::vector<NumT> & delta_x, std::vector<NumT> const& x, std::vector<NumT> const& rhs, typename TypeTraits<NumT>::RealType const& delta_t)
+			static void Predict(std::vector<NumT> & delta_x, std::vector<NumT> const& x, std::vector<NumT> const& rhs, typename NumTraits<NumT>::RealType const& delta_t)
 			{	
 				return PolyT::DoPredict(delta_x, x, rhs, delta_t);
 			}
@@ -50,7 +50,7 @@ namespace nups {
 			First-order Euler predictor, using a linear solver provided as a template type.
 			*/
 			template<typename NumT>
-			static void DoPredict(std::vector<NumT> & delta_x, std::vector<NumT> const& x, std::vector<NumT> const& rhs, typename TypeTraits<NumT>::RealType const& delta_t)
+			static void DoPredict(std::vector<NumT> & delta_x, std::vector<NumT> const& x, std::vector<NumT> const& rhs, typename NumTraits<NumT>::RealType const& delta_t)
 			{
 
 				// the euler step
@@ -75,7 +75,7 @@ namespace nups {
 			Fourth-order Runge-Kutta predictor, using a linear solver provided as a template type.
 			*/
 			template<typename NumT>
-			static void DoPredict(std::vector<NumT> & delta_x, std::vector<NumT> const& x, std::vector<NumT> const& rhs, typename TypeTraits<NumT>::RealType const& delta_t)
+			static void DoPredict(std::vector<NumT> & delta_x, std::vector<NumT> const& x, std::vector<NumT> const& rhs, typename NumTraits<NumT>::RealType const& delta_t)
 			{
 				std::vector<NumT> k1, k2, k3, k4;
 

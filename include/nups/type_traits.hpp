@@ -28,12 +28,12 @@
 namespace nups
 {	
 	template <typename T>
-	struct TypeTraits
+	struct NumTraits
 	{
 	};
 
 	template<>
-	struct TypeTraits<double>
+	struct NumTraits<double>
 	{
 		enum {IsComplex = 0};
 		typedef double RealType;
@@ -41,7 +41,7 @@ namespace nups
 	};
 
 	template<>
-	struct TypeTraits<std::complex<double> >
+	struct NumTraits<std::complex<double> >
 	{
 		enum {IsComplex = 1};
 		typedef double RealType;

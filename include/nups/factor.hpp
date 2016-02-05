@@ -38,7 +38,7 @@ namespace nups {
 			Factors the polynomial represented by p into two polynomials, r and s.
 			*/
 			template<typename NumT>
-			static void Factor(std::vector<typename TypeTraits<NumT>::ComplexType> & r, std::vector<typename TypeTraits<NumT>::ComplexType> & s, std::vector<NumT> const& p)
+			static void Factor(std::vector<typename NumTraits<NumT>::ComplexType> & r, std::vector<typename NumTraits<NumT>::ComplexType> & s, std::vector<NumT> const& p)
 			{
 				if (p.size()!=PolyT::Degree && p.size()!=PolyT::Degree+1)
 				{
@@ -66,19 +66,19 @@ namespace nups {
 		private:
 			// factors a monic octic univariate polynomial into two quartics.
 			template<typename NumT>
-			static void DoFactorMonic(std::vector<typename TypeTraits<NumT>::ComplexType> & r, std::vector<typename TypeTraits<NumT>::ComplexType> & s, std::vector<NumT> const& a)
+			static void DoFactorMonic(std::vector<typename NumTraits<NumT>::ComplexType> & r, std::vector<typename NumTraits<NumT>::ComplexType> & s, std::vector<NumT> const& a)
 			{
 
-				unsigned num_steps = 25;
-				unsigned num_corrects_during = 5;
-				unsigned num_corrects_after = 6;
+				unsigned num_steps = 31;
+				unsigned num_corrects_during = 7;
+				unsigned num_corrects_after = 8;
 
 
 
 
 
-				typename TypeTraits<NumT>::RealType t(1);
-				typename TypeTraits<NumT>::RealType delta_t(typename TypeTraits<NumT>::RealType(-1)/num_steps);
+				typename NumTraits<NumT>::RealType t(1);
+				typename NumTraits<NumT>::RealType delta_t(typename NumTraits<NumT>::RealType(-1)/num_steps);
 				std::vector<NumT> delta_x;
 
 				std::vector<NumT> x(PolyT::Degree);
@@ -98,35 +98,11 @@ namespace nups {
 				ComputeA_Star_Minus_A(a_star_minus_a, a_star, a);
 
 				
-
-				
-
-				if (0)
-				{
-					print_to_screen_matlab(x,"x_start");
-					print_to_screen_matlab(a,"a");
-					print_to_screen_matlab(a_star,"a_star");
-					std::cout << "delta_t: " << delta_t << std::endl;
-				}
 				
 				for (unsigned n=0; n<num_steps; ++n)
 				{
-					if (0)
-					{
-						std::cout << "\n\ntaking step " << n << ", t: " << t << std::endl;
-						print_to_screen_matlab(x,"x");
-						
-						PolyT::EvaluateHomotopy(residuals, x, a, a_star, t);
-						print_to_screen_matlab(residuals,"residuals");
-						
-					}
 
 					PolyT::Predictor::Predict(delta_x, x, a_star_minus_a, delta_t);
-
-					if (0)
-					{
-						print_to_screen_matlab(delta_x,"delta_x");
-					}
 
 					for (unsigned ii=0; ii<PolyT::Degree; ++ii)
 						x[ii] += delta_x[ii];
@@ -135,15 +111,10 @@ namespace nups {
 
 					for (unsigned kk=0; kk<num_corrects_during; kk++)
 						Correct(x,a,a_star,t);
-					
 				}
 
 				for (unsigned kk=0; kk<num_corrects_after; kk++)
 					Correct(x,a);
-
-				if (0)
-					print_to_screen_matlab(x,"final_x");
-
 
 				// here we reverse the order of the coefficients back into `subscripts matching`.
 				r.resize(PolyT::DegreeFactorR);
@@ -172,7 +143,7 @@ namespace nups {
 
 
 			template<typename NumT>
-			static void Correct(std::vector<NumT> & x, std::vector<NumT> const& a, std::vector<NumT> const& a_star, typename TypeTraits<NumT>::RealType const& t)
+			static void Correct(std::vector<NumT> & x, std::vector<NumT> const& a, std::vector<NumT> const& a_star, typename NumTraits<NumT>::RealType const& t)
 			{
 				std::vector<NumT> residuals;
 
@@ -258,7 +229,7 @@ namespace nups {
 
 
 			template<typename NumT>
-			static void EvaluateHomotopy(std::vector<NumT> & f, std::vector<NumT> const& rs, std::vector<NumT> const& a, std::vector<NumT> const& a_star, typename TypeTraits<NumT>::RealType const& t)
+			static void EvaluateHomotopy(std::vector<NumT> & f, std::vector<NumT> const& rs, std::vector<NumT> const& a, std::vector<NumT> const& a_star, typename NumTraits<NumT>::RealType const& t)
 			{	
 				const NumT& r3 = rs[0];
 				const NumT& r2 = rs[1];
