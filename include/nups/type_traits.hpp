@@ -58,7 +58,7 @@ namespace nups
 	{
 		static double Generate()
 		{
-			return 2*(rand())/RAND_MAX-0.5;
+			return 2*(double(rand())/RAND_MAX-0.5);
 		}
 	};
 
