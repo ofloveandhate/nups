@@ -34,37 +34,44 @@ namespace nups {
 		template<typename PolyT>
 		struct FactorizerBase
 		{
+			/**
+			Factors the polynomial represented by p into two polynomials, r and s.
+			*/
 			template<typename NumT>
-			static void Factor(std::vector<NumT> & coefficients_r, std::vector<NumT> & coefficients_s, std::vector<NumT> const& coefficients_start)
+			static void Factor(std::vector<typename TypeTraits<NumT>::ComplexType> & r, std::vector<typename TypeTraits<NumT>::ComplexType> & s, std::vector<NumT> const& p)
 			{
-				if (coefficients_start.size()!=PolyT::Degree && coefficients_start.size()!=PolyT::Degree+1)
+				if (p.size()!=PolyT::Degree && p.size()!=PolyT::Degree+1)
 				{
 					std::stringstream error_message;
-					error_message << "factoring a polynomial of PolyT::Degree " << PolyT::Degree << " must have " << PolyT::Degree << " or " << PolyT::Degree+1 << " coefficients.  yours has " << coefficients_start.size();
+					error_message << "factoring a polynomial of PolyT::Degree " << PolyT::Degree << " must have " << PolyT::Degree << " or " << PolyT::Degree+1 << " coefficients.  yours has " << p.size();
 					throw std::runtime_error(error_message.str());
 				}
 
-				if (coefficients_start.size()==PolyT::Degree+1)
-				{
-					std::vector<NumT> re_scaled_coefficients(PolyT::Degree);
-					for (unsigned ii = 0; ii < PolyT::Degree; ++ii)
-						re_scaled_coefficients[ii] = coefficients_start[ii] / coefficients_start[PolyT::Degree];
+				std::vector<NumT> re_ordered_coefficients(PolyT::Degree);
 
-					return PolyT::DoFactorMonic(coefficients_r, coefficients_s, coefficients_start);
+				if (p.size()==PolyT::Degree+1)
+				{
+					for (unsigned ii = 0; ii < PolyT::Degree; ++ii)
+						re_ordered_coefficients[PolyT::Degree-1 - ii] = p[ii] / p[PolyT::Degree];
+				}
+				else
+				{
+					for (unsigned ii = 0; ii < PolyT::Degree; ++ii)
+						re_ordered_coefficients[PolyT::Degree-1 - ii] = p[ii];
 				}
 
-				return PolyT::DoFactorMonic(coefficients_r, coefficients_s, coefficients_start);
+				return PolyT::DoFactorMonic(r, s, re_ordered_coefficients);
 			}
 
 		private:
 			// factors a monic octic univariate polynomial into two quartics.
 			template<typename NumT>
-			static void DoFactorMonic(std::vector<NumT> & coefficients_r, std::vector<NumT> & coefficients_s, std::vector<NumT> const& a)
+			static void DoFactorMonic(std::vector<typename TypeTraits<NumT>::ComplexType> & r, std::vector<typename TypeTraits<NumT>::ComplexType> & s, std::vector<NumT> const& a)
 			{
 
-				unsigned num_steps = 18;
-				unsigned num_corrects_during = 4;
-				unsigned num_corrects_after = 4;
+				unsigned num_steps = 25;
+				unsigned num_corrects_during = 5;
+				unsigned num_corrects_after = 6;
 
 
 
@@ -94,16 +101,17 @@ namespace nups {
 
 				
 
-				
-				print_to_screen_matlab(x,"x_start");
-				print_to_screen_matlab(a,"a");
-				print_to_screen_matlab(a_star,"a_star");
-				std::cout << "delta_t: " << delta_t << std::endl;
-
+				if (0)
+				{
+					print_to_screen_matlab(x,"x_start");
+					print_to_screen_matlab(a,"a");
+					print_to_screen_matlab(a_star,"a_star");
+					std::cout << "delta_t: " << delta_t << std::endl;
+				}
 				
 				for (unsigned n=0; n<num_steps; ++n)
 				{
-					if (1)
+					if (0)
 					{
 						std::cout << "\n\ntaking step " << n << ", t: " << t << std::endl;
 						print_to_screen_matlab(x,"x");
@@ -115,7 +123,7 @@ namespace nups {
 
 					PolyT::Predictor::Predict(delta_x, x, a_star_minus_a, delta_t);
 
-					if (1)
+					if (0)
 					{
 						print_to_screen_matlab(delta_x,"delta_x");
 					}
@@ -133,16 +141,18 @@ namespace nups {
 				for (unsigned kk=0; kk<num_corrects_after; kk++)
 					Correct(x,a);
 
-				if (1)
+				if (0)
 					print_to_screen_matlab(x,"final_x");
 
-				coefficients_r.resize(PolyT::DegreeFactorR);
-				for (unsigned ii = 0; ii < PolyT::DegreeFactorR; ++ii)
-					coefficients_r[ii] = x[ii];
 
-				coefficients_s.resize(PolyT::DegreeFactorS);
+				// here we reverse the order of the coefficients back into `subscripts matching`.
+				r.resize(PolyT::DegreeFactorR);
+				for (unsigned ii = 0; ii < PolyT::DegreeFactorR; ++ii)
+					r[PolyT::DegreeFactorR-1-ii] = x[ii];
+
+				s.resize(PolyT::DegreeFactorS);
 				for (unsigned ii = 0; ii < PolyT::DegreeFactorS; ++ii)
-					coefficients_s[ii] = x[ii+PolyT::DegreeFactorR];
+					s[PolyT::DegreeFactorS-1-ii] = x[ii+PolyT::DegreeFactorR];
 			}
 
 
@@ -308,11 +318,6 @@ namespace nups {
 				  DegreeFactorS = 2
 				 };
 
-			// factors a monic decic univariate polynomial
-			template<typename NumT>
-			static void DoFactorMonic(std::vector<NumT> & coefficients_r, std::vector<NumT> & coefficients_s, std::vector<NumT> const& coefficients_start)
-			{
-			}
 		};
 
 	} // re: namespace factor

@@ -56,6 +56,89 @@ namespace nups {
 			}
 
 
+			template<typename SolnT, typename CoeffT>
+			static void SharpenNonMonic(std::vector<SolnT>& solutions, std::vector<CoeffT> const& coeffs, unsigned num_iterations)
+			{
+				for (unsigned int ii=0; ii<num_iterations; ++ii)
+				{
+					for (typename std::vector<SolnT>::iterator iter=solutions.begin(); iter!=solutions.end(); ++iter)
+					{
+						*iter -= EvaluatePolyNonMonic(*iter,coeffs)/EvaluateDerivNonMonic(*iter,coeffs);
+					}
+				}
+			}
+
+			template<typename SolnT, typename CoeffT>
+			static void SharpenMonic(std::vector<SolnT>& solutions, std::vector<CoeffT> const& coeffs, unsigned num_iterations)
+			{
+				for (unsigned int ii=0; ii<num_iterations; ++ii)
+					for (typename std::vector<SolnT>::iterator iter=solutions.begin(); iter!=solutions.end(); ++iter)
+						*iter -= EvaluatePolyMonic(*iter,coeffs)/EvaluateDerivMonic(*iter,coeffs);
+
+			}
+
+
+			template<typename SolnT, typename CoeffT>
+			static SolnT EvaluatePolyNonMonic(SolnT const& x, std::vector<CoeffT> const& coeffs)
+			{
+				SolnT x_val(1), f(0);
+				for (typename std::vector<CoeffT>::const_iterator iter = coeffs.begin(); iter != coeffs.end(); ++iter)
+				{
+					f += *iter * x_val;
+					x_val *= x;
+				}
+				return f;
+			}
+
+			// assumes MONIC POLYNOMIAL, with omitted 1 at the front.
+			template<typename SolnT, typename CoeffT>
+			static SolnT EvaluatePolyMonic(SolnT const& x, std::vector<CoeffT> const& coeffs)
+			{	
+				SolnT x_val(1), f(0);
+				for (typename std::vector<CoeffT>::const_iterator iter = coeffs.begin(); iter != coeffs.end(); ++iter)
+				{
+					f += *iter * x_val;
+					x_val *= x;
+				}
+				f += x_val;
+				return f;
+			}
+
+
+			template<typename SolnT, typename CoeffT>
+			static SolnT EvaluateDerivNonMonic(SolnT & x, std::vector<CoeffT> const& coeffs)
+			{
+				SolnT x_val(1), f(0);
+				typename TypeTraits<SolnT>::RealType pre_factor(1);
+
+				for (typename std::vector<CoeffT>::const_iterator iter = coeffs.begin()+1; iter != coeffs.end(); ++iter)
+				{
+					f += *iter * x_val * pre_factor;
+					pre_factor++;
+					x_val *= x;
+				}
+				return f;
+			}
+
+
+			template<typename SolnT, typename CoeffT>
+			static SolnT EvaluateDerivMonic(SolnT & x, std::vector<CoeffT> const& coeffs)
+			{
+				SolnT x_val(1), f(0);
+				typename TypeTraits<SolnT>::RealType pre_factor(1);
+
+				for (typename std::vector<CoeffT>::const_iterator iter = coeffs.begin()+1; iter != coeffs.end(); ++iter)
+				{
+					f += *iter * x_val * pre_factor;
+					pre_factor++;
+					x_val *= x;
+				}
+				f += x_val*pre_factor;
+				return f;
+			}
+
+
+
 		private:
 			template<typename SolnT, typename CoeffT>
 			static void SolveNoComplex(std::vector<SolnT>& solutions, std::vector<CoeffT> const& coefficients)
@@ -83,13 +166,20 @@ namespace nups {
 				{
 					std::vector<CoeffT> re_scaled_coefficients(degree);
 					for (unsigned ii = 0; ii < degree; ++ii)
-						re_scaled_coefficients[ii] = coefficients[ii+1] / coefficients[0];
+						re_scaled_coefficients[ii] = coefficients[ii] / coefficients[degree];
 
 					return PolyT::SolveWithComplexMonic(solutions, re_scaled_coefficients);
 				}
 				else
 					PolyT::SolveWithComplexMonic(solutions, coefficients);
 			}
+
+
+
+
+
+
+
 
 		};
 
@@ -103,10 +193,10 @@ namespace nups {
 			{	
 				solutions.resize(2);
 
-				SolnT sqrt_discriminant = sqrt(pow(coefficients[0],2) - 4.*coefficients[1]);
+				SolnT sqrt_discriminant = sqrt(pow(coefficients[1],2) - 4.*coefficients[0]);
 
-				solutions[0] = (-coefficients[0] + sqrt_discriminant)/2.;
-				solutions[1] = (-coefficients[0] - sqrt_discriminant)/2.;
+				solutions[1] = (-coefficients[1] + sqrt_discriminant)/2.;
+				solutions[0] = (-coefficients[1] - sqrt_discriminant)/2.;
 			}
 		}; // Quadratic
 
@@ -125,11 +215,10 @@ namespace nups {
 				solutions.resize(4);
 
 				// the leading coefficient, a, is 1 by hypothesis
-				const CoeffT& e = coefficients[3];
-				const CoeffT& d = coefficients[2];
-				const CoeffT& c = coefficients[1];
-				const CoeffT& b = coefficients[0];
-				//a = 1 by assumption
+				const CoeffT& e = coefficients[0];
+				const CoeffT& d = coefficients[1];
+				const CoeffT& c = coefficients[2];
+				const CoeffT& b = coefficients[3];
 
 				SolnT delta_0 = c*c - CoeffT(3)*b*d + CoeffT(12)*e;
 				SolnT delta_1 = CoeffT(2)*pow(c,3) - CoeffT(9)*b*c*d + CoeffT(27)*b*b*e + CoeffT(27)*d*d - CoeffT(72)*c*e;
@@ -178,12 +267,13 @@ namespace nups {
 
 		template< template<class> class PredictorT = nups::predict::RK4>
 		struct Octic : public SolverBase<8, Octic< PredictorT > >
-		{
+		{	
 			typedef PredictorT<OcticLinear> Predictor;
 
 			template<typename SolnT, typename CoeffT>
 			static void SolveWithComplexMonic(std::vector<SolnT>& solutions, std::vector<CoeffT> const& coefficients)
 			{	
+				unsigned num_sharpens = 5;
 
 				if (coefficients.size()!=8)
 					throw std::runtime_error("solving a monic degree 8 polynomial requires 8 coefficients.");
@@ -202,6 +292,8 @@ namespace nups {
 
 				for (unsigned ii = 0; ii < 4; ++ii)
 					solutions[ii+4] = solns_temp_2[ii];
+
+				Octic::SharpenMonic(solutions, coefficients, num_sharpens);
 			}
 
 		}; // Octic

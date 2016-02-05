@@ -9,15 +9,17 @@ lib_LTLIBRARIES += libnups.la
 
 nups_sources = \
 	include/nups/nups.hpp \
-	include/nups/solve.hpp \
+	include/nups/polynomial_solve.hpp \
+	include/nups/linear_solve.hpp \
 	include/nups/factor.hpp \
-	include/type_traits.hpp \
+	include/nups/type_traits.hpp \
 	src/nups.cpp
 
 
 rootinclude_HEADERS += \
 	include/nups/nups.hpp \
-	include/nups/solve.hpp \
+	include/nups/polynomial_solve.hpp \
+	include/nups/linear_solve.hpp \
 	include/nups/factor.hpp \
 	include/nups/type_traits.hpp
 

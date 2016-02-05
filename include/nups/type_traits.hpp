@@ -54,6 +54,15 @@ namespace nups
 	};
 
 	template<>
+	struct Random<double>
+	{
+		static double Generate()
+		{
+			return 2*(rand())/RAND_MAX-0.5;
+		}
+	};
+
+	template<>
 	struct Random<std::complex<double> >
 	{
 		static std::complex<double> Generate()
@@ -69,19 +78,34 @@ namespace nups
 		}
 	};
 
-	inline
-	void print_to_screen_matlab(std::vector<std::complex<double> > const& v, std::string const& name)
-	{	
-		std::cout.precision(16);
-		std::cout << name << " = [...\n";
-		for (int ii = 0; ii < v.size(); ii++)
-		{ // print kth coordinate
-			std::cout << real(v[ii]) << "+1i*" << imag(v[ii])<<";\n";
+
+
+
+	template<typename T>
+		void print_to_screen_matlab(std::vector<std::complex<T> > const& v, std::string const& name)
+		{	
+			std::cout.precision(16);
+			std::cout << name << " = [...\n";
+			for (int ii = 0; ii < v.size(); ii++)
+			{ // print kth coordinate
+				std::cout << real(v[ii]) << "+1i*" << imag(v[ii])<<";\n";
+			}
+			std::cout << "];\n\n";
 		}
-		std::cout << "];\n\n";
-	}
 
+		template<typename T>
+		void print_to_screen_matlab(std::vector<T> const& v, std::string const& name)
+		{	
+			std::cout.precision(16);
+			std::cout << name << " = [...\n";
+			for (int ii = 0; ii < v.size(); ii++)
+			{ // print kth coordinate
+				std::cout << v[ii] << ";\n";
+			}
+			std::cout << "];\n\n";
+		}
 
+	
 
 }
 
