@@ -97,6 +97,23 @@ namespace nups
 	};
 
 
+	template<typename T>
+	T NChooseK(unsigned n, unsigned k)
+	{
+		T result(1);
+
+		for (int ii = 1; ii <= k; ++ii)
+		{
+			result *= (n+1-ii);
+		}
+
+		for (int ii = 1; ii <= k; ++ii)
+		{
+			result /= (ii);
+		}
+		return result;
+	}
+
 	template<>
 	struct Random<double>
 	{

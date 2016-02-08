@@ -159,33 +159,33 @@ namespace nups {
 
 			In this particular predictor, the matrix A is assumed to have a block structure.  The structure comes from the product \f$r \cdot s\f$, where \f$r\f$ and \f$s\f$ are monic quartic polynomials.  That is, the code here has specific instructions on how to solve the special linear system for the factoring of an octic monic univariate into two monic quartics
 			*/
-			template<typename NumT>
-			static void DoSolve(std::vector<NumT> & solution, std::vector<NumT> const& variables, std::vector<NumT> const& rhs)
+			template<typename XNumT, typename RHSNumT>
+			static void DoSolve(std::vector<XNumT> & solution, std::vector<XNumT> const& variables, std::vector<RHSNumT> const& rhs)
 			{
 				if (variables.size()!=8)
 					throw std::runtime_error("there must be 8 variables in the input for octic linear solver");
 				if (rhs.size()!=8)
 					throw std::runtime_error("there must be 8 variables in the right hand side for octic linear solver");
 
-				const NumT& r3 = variables[0];
-				const NumT& r2 = variables[1];
-				const NumT& r1 = variables[2];
-				const NumT& r0 = variables[3];
+				const XNumT& r3 = variables[0];
+				const XNumT& r2 = variables[1];
+				const XNumT& r1 = variables[2];
+				const XNumT& r0 = variables[3];
 
-				const NumT& s3 = variables[4];
-				const NumT& s2 = variables[5];
-				const NumT& s1 = variables[6];
-				const NumT& s0 = variables[7];
+				const XNumT& s3 = variables[4];
+				const XNumT& s2 = variables[5];
+				const XNumT& s1 = variables[6];
+				const XNumT& s0 = variables[7];
 
-				const NumT& b1 = rhs[0];
-				const NumT& b2 = rhs[1];
-				const NumT& b3 = rhs[2];
-				const NumT& b4 = rhs[3];
+				const RHSNumT& b1 = rhs[0];
+				const RHSNumT& b2 = rhs[1];
+				const RHSNumT& b3 = rhs[2];
+				const RHSNumT& b4 = rhs[3];
 
-				const NumT& c1 = rhs[4];
-				const NumT& c2 = rhs[5];
-				const NumT& c3 = rhs[6];
-				const NumT& c4 = rhs[7];
+				const RHSNumT& c1 = rhs[4];
+				const RHSNumT& c2 = rhs[5];
+				const RHSNumT& c3 = rhs[6];
+				const RHSNumT& c4 = rhs[7];
 
 				// first we will solve the problem in the top of the block matrix.
 
@@ -216,8 +216,8 @@ namespace nups {
 
 
 				//set up some temporaries			
-				const NumT z31 =  pow(s3,2)-s2;
-				const NumT z41 = -pow(s3,3)+NumT(2)*s2*s3-s1;
+				const XNumT z31 =  s3*s3-s2;
+				const XNumT z41 = -s3*s3*s3+XNumT(2)*s2*s3-s1;
 
 				//                        Cx+Dy = c
 				//        C(A^{-1}(b - B y))+Dy = c
@@ -257,7 +257,7 @@ namespace nups {
 				//(4, 3) = -s0*s3, 
 				//(4, 4) = s0}, datatype = anything, storage = rectangular, order = Fortran_order, shape = [])
 
-				std::vector<NumT> w(16);
+				std::vector<XNumT> w(16);
 				// w = C A^{-1}
 				w[0] = s0-s1*s3 + s2*z31 + s3*z41;
 				w[1] = s1-s2*s3 + s3*z31;
@@ -300,7 +300,7 @@ namespace nups {
 				// [  0, r0, r1, r2]
 				// [  0,  0, r0, r1]
 				// [  0,  0,  0, r0]
-				std::vector<NumT> M(16);	
+				std::vector<XNumT> M(16);	
 
 				M[0]  = -(w[1]*r3+w[2]*r2+w[3]*r1+w[0])		+ r0;
 				M[1]  = -(w[2]*r3+w[3]*r2+w[1])				+ r1;
@@ -327,13 +327,13 @@ namespace nups {
 				//
 
 				// essentially c - C A_inv b
-				std::vector<NumT> y(4);
+				std::vector<XNumT> y(4);
 				y[0] = c1 -  (w[0]*b1 +  w[1]*b2 +  w[2]*b3 +  w[3]*b4);
 				y[1] = c2 -  (w[4]*b1 +  w[5]*b2 +  w[6]*b3 +  w[7]*b4);
 				y[2] = c3 -  (w[8]*b1 +  w[9]*b2 + w[10]*b3 + w[11]*b4);
 				y[3] = c4 - (w[12]*b1 + w[13]*b2 + w[14]*b3 + w[15]*b4);
 				
-				std::vector<NumT> temp(4);
+				std::vector<XNumT> temp(4);
 				QuarticDenseLinear::Solve(temp, M,y);
 
 				solution[4] = temp[0];
@@ -341,10 +341,10 @@ namespace nups {
 				solution[6] = temp[2];
 				solution[7] = temp[3];
 
-				const NumT& y1 = temp[0];
-				const NumT& y2 = temp[1];
-				const NumT& y3 = temp[2];
-				const NumT& y4 = temp[3];
+				const XNumT& y1 = temp[0];
+				const XNumT& y2 = temp[1];
+				const XNumT& y3 = temp[2];
+				const XNumT& y4 = temp[3];
 
 				// then finally compute the first four entries in the solution.  they're easy at this point
 				// Matrix(4, 1, {
@@ -357,8 +357,8 @@ namespace nups {
 				// const NumT z31 =  pow(s3,2)-s2;
 				// const NumT z41 = -pow(s3,3)+NumT(2)*s2*s3-s1;
 
-				const NumT t1 = -y1*r3 + b2-y2;
-				const NumT t2 = -y1*r2 - y2*r3 + b3-y3;
+				const XNumT t1 = -y1*r3 + b2-y2;
+				const XNumT t2 = -y1*r2 - y2*r3 + b3-y3;
 
 				//      x = A^{-1}(b - B y)
 
