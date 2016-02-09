@@ -38,6 +38,11 @@ namespace nups
 		enum {IsComplex = 0};
 		typedef float RealType;
 		typedef std::complex<float> ComplexType;
+
+		static float NewtonTerminationThreshold() 
+		{
+			return float(1e-5);
+		}
 	};
 
 	template<>
@@ -46,6 +51,11 @@ namespace nups
 		enum {IsComplex = 1};
 		typedef float RealType;
 		typedef std::complex<float> ComplexType;
+
+		static float NewtonTerminationThreshold() 
+		{
+			return float(1e-5);
+		}
 	};
 
 
@@ -56,6 +66,11 @@ namespace nups
 		enum {IsComplex = 0};
 		typedef double RealType;
 		typedef std::complex<double> ComplexType;
+
+		static double NewtonTerminationThreshold() 
+		{
+			return 1e-11;
+		}
 	};
 
 	template<>
@@ -64,6 +79,11 @@ namespace nups
 		enum {IsComplex = 1};
 		typedef double RealType;
 		typedef std::complex<double> ComplexType;
+
+		static double NewtonTerminationThreshold() 
+		{
+			return 1e-11;
+		}
 	};
 
 	template<typename T>

@@ -70,13 +70,17 @@ namespace nups {
 			\see SharpenMonic
 			*/
 			template<typename SolnT, typename CoeffT>
-			static void SharpenNonMonic(std::vector<SolnT>& solutions, std::vector<CoeffT> const& coeffs, unsigned num_iterations)
+			static void SharpenNonMonic(std::vector<SolnT>& solutions, std::vector<CoeffT> const& coeffs, double final_tolerance, unsigned max_iterations)
 			{
-				for (unsigned int ii(0); ii<num_iterations; ++ii)
-				{
-					for (typename std::vector<SolnT>::iterator iter=solutions.begin(); iter!=solutions.end(); ++iter)
+				
+				for (typename std::vector<SolnT>::iterator iter=solutions.begin(); iter!=solutions.end(); ++iter)
+				{	
+					for (unsigned int ii(0); ii<max_iterations; ++ii)
 					{
-						*iter -= EvaluatePolyNonMonic(*iter,coeffs)/EvaluateDerivNonMonic(*iter,coeffs);
+						SolnT delta_x = EvaluatePolyNonMonic(*iter,coeffs)/EvaluateDerivNonMonic(*iter,coeffs);
+						*iter -= delta_x;
+						if (abs(delta_x) < final_tolerance)
+							break;
 					}
 				}
 			}
@@ -88,11 +92,16 @@ namespace nups {
 			\see SharpenNonMonic
 			*/
 			template<typename SolnT, typename CoeffT>
-			static void SharpenMonic(std::vector<SolnT>& solutions, std::vector<CoeffT> const& coeffs, unsigned num_iterations)
+			static void SharpenMonic(std::vector<SolnT>& solutions, std::vector<CoeffT> const& coeffs, double final_tolerance, unsigned max_iterations)
 			{
-				for (unsigned int ii(0); ii<num_iterations; ++ii)
-					for (typename std::vector<SolnT>::iterator iter=solutions.begin(); iter!=solutions.end(); ++iter)
-						*iter -= EvaluatePolyMonic(*iter,coeffs)/EvaluateDerivMonic(*iter,coeffs);
+				for (typename std::vector<SolnT>::iterator iter=solutions.begin(); iter!=solutions.end(); ++iter)
+					for (unsigned int ii(0); ii<max_iterations; ++ii)
+					{
+						SolnT delta_x = EvaluatePolyMonic(*iter,coeffs)/EvaluateDerivMonic(*iter,coeffs);
+						*iter -= delta_x;
+						if (abs(delta_x) < final_tolerance)
+							break;
+					}
 
 			}
 
@@ -308,7 +317,7 @@ namespace nups {
 			\param corrects_during The number of Newton corrections taken after each step of the homotopy for the factorization.
 			\param corrects_after The number of Newton corrections taken after factorization, but before solution of the factored quartics.
 			*/
-			Octic(unsigned sharpens = 5, unsigned steps = 20, unsigned corrects_during = 5, unsigned corrects_after = 5) : num_sharpens_(sharpens), factorizer_(steps, corrects_during, corrects_after)
+			Octic(double final_tolerance, unsigned max_iterations_final = 7, unsigned steps = 20, unsigned corrects_during = 7, unsigned corrects_after = 7) : max_iterations_(max_iterations_final), final_tolerance_(final_tolerance), factorizer_(steps, corrects_during, corrects_after)
 			{
 			}
 
@@ -340,12 +349,13 @@ namespace nups {
 				for (unsigned ii = 0; ii < 4; ++ii)
 					solutions[ii+4] = solns_temp_2[ii];
 
-				this->SharpenMonic(solutions, coefficients, num_sharpens_);
+				this->SharpenMonic(solutions, coefficients, final_tolerance_, max_iterations_);
 			}
 
 			factor::Octic<Predictor,StartT> factorizer_;
 			solver::Quartic quartic_solver_;
-			unsigned num_sharpens_;
+			double final_tolerance_;
+			unsigned max_iterations_;
 		}; // Octic
 
 

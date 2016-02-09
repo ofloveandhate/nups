@@ -50,11 +50,8 @@ namespace nups {
 			static void Generate(std::vector<NumT> & rs_start)
 			{
 				rs_start.resize(DegreeFactorR+DegreeFactorS);
-				for (unsigned ii(0); ii<DegreeFactorR; ++ii)
+				for (unsigned ii(0); ii<DegreeFactorR+DegreeFactorS; ++ii)
 					rs_start[ii] = nups::Random<NumT>::Generate();
-
-				for (unsigned ii(0); ii<DegreeFactorS; ++ii)
-					rs_start[ii+DegreeFactorR] = nups::Random<NumT>::Generate();
 			}
 		};
 
@@ -183,11 +180,13 @@ namespace nups {
 					t += delta_t;
 
 					for (unsigned kk=0; kk<num_corrects_during_; kk++)
-						Correct(x,a,a_star,t);
+						if (Correct(x,a,a_star,t))
+							break;
 				}
 
 				for (unsigned kk=0; kk<num_corrects_after_; kk++)
-					Correct(x,a);
+					if (Correct(x,a))
+						break;
 
 				// here we reverse the order of the coefficients back into `subscripts matching`.
 				r.resize(PolyT::DegreeFactorR);
@@ -208,9 +207,11 @@ namespace nups {
 					a_star_minus_a[ii] = a_star[ii] - a[ii];
 			}
 
-
+			/**
+			\return true if correction loop should terminate, false otherwise.
+			*/
 			template<typename NumT>
-			static void Correct(std::vector<typename NumTraits<NumT>::ComplexType> & x, 
+			static bool Correct(std::vector<typename NumTraits<NumT>::ComplexType> & x, 
 			                    std::vector<NumT> const& a, 
 			                    std::vector<typename NumTraits<NumT>::ComplexType> const& a_star, 
 			                    typename NumTraits<NumT>::RealType const& t)
@@ -219,30 +220,54 @@ namespace nups {
 
 				PolyT::EvaluateHomotopy(residuals, x, a, a_star, t);
 
-				for (unsigned ii=0; ii<PolyT::Degree; ++ii)
-					residuals[ii] = -residuals[ii];
 
 				std::vector<typename NumTraits<NumT>::ComplexType> delta_x;
 				PolyT::Predictor::LinSolver::Solve(delta_x, x, residuals);
+
 				for (unsigned ii=0; ii<PolyT::Degree; ++ii)
-					x[ii] += delta_x[ii];
+					x[ii] -= delta_x[ii];
+
+				for (typename std::vector<typename NumTraits<NumT>::ComplexType>::const_iterator iter = delta_x.begin(); iter!=delta_x.end(); ++iter)
+				{
+					if (abs(*iter) > NumTraits<NumT>::NewtonTerminationThreshold())
+						return false;
+				}
+
+				return true;
+				// if (max_norm < 1e-15)
+					// std::cout << "reached numerical zero " << ++bla << " during\n";
 			}
 
+			/**
+			\return true if correction loop should terminate, false otherwise.
+			*/
 			template<typename ANumT, typename XNumT>
-			static void Correct(std::vector<XNumT> & x, std::vector<ANumT> const& a)
+			static bool Correct(std::vector<XNumT> & x, std::vector<ANumT> const& a)
 			{
-				std::vector<XNumT> residuals;
+				std::vector<XNumT> residuals(PolyT::Degree);
 
 				PolyT::EvaluateHomotopy(residuals, x, a);
 
-				for (unsigned ii=0; ii<PolyT::Degree; ++ii)
-					residuals[ii] = -residuals[ii];
+				// for (unsigned ii=0; ii<PolyT::Degree; ++ii)
+				// 	residuals[ii] = -residuals[ii];
 
 				std::vector<XNumT> delta_x;
 				PolyT::Predictor::LinSolver::Solve(delta_x, x, residuals);
+				
 				for (unsigned ii=0; ii<PolyT::Degree; ++ii)
-					x[ii] += delta_x[ii];
+					x[ii] -= delta_x[ii];
+				
+				for (typename std::vector<typename NumTraits<XNumT>::ComplexType>::const_iterator iter = delta_x.begin(); iter!=delta_x.end(); ++iter)
+				{
+					if (abs(*iter) > NumTraits<XNumT>::NewtonTerminationThreshold())
+						return false;
+				}
+
+				return true;
+
 			}
+
+
 		}; // re: FactorizerBase
 		
 

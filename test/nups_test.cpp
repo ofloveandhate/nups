@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(solve_random_octic_xxx_times)
 	#ifndef NO_RANDOM
 	srand(time(NULL));
 	#endif
-	unsigned num_solves = 1000;
+	unsigned num_solves = 10000;
 
 	std::clock_t start = std::clock();
    
@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(solve_random_octic_xxx_times)
 	double accuracy(1e-5);
 	unsigned num_misses = 0;
 
-	nups::solver::Octic<> octic_solver;
+	nups::solver::Octic<> octic_solver(accuracy);
 
 
 	for (unsigned solve_counter = 0; solve_counter < num_solves; solve_counter++)
@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE(solve_random_octic_xxx_times_single_precision)
 	{
 		RandomTestOctic(coefficients, expected_solutions);
 
-		nups::solver::Octic<> octic_solver;
+		nups::solver::Octic<> octic_solver(accuracy);
 		octic_solver.Solve(solutions, coefficients);
 
 		for (int jj=0; jj<8; jj++)
@@ -434,6 +434,8 @@ BOOST_AUTO_TEST_CASE(solve_octic_8_real_roots)
 	std::vector<std::complex<double> > solutions;
 	std::vector<std::complex<double> > coefficients(9);
 
+	double accuracy(1e-5);
+
 	coefficients[8] = std::complex<double>(0.95788953015050193329216199344955);
 	coefficients[7] = std::complex<double>(-4.616048869845871114437097477657);
 	coefficients[6] = std::complex<double>(9.4118690334462455604524464083315);
@@ -446,7 +448,7 @@ BOOST_AUTO_TEST_CASE(solve_octic_8_real_roots)
 
 
 
-	nups::solver::Octic<> octic_solver;
+	nups::solver::Octic<> octic_solver(accuracy);
 	octic_solver.Solve(solutions, coefficients);
 	//
 	BOOST_CHECK(solutions.size()==8);
@@ -471,7 +473,7 @@ BOOST_AUTO_TEST_CASE(solve_octic_8_real_roots)
 		for (int ii=0; ii<8; ii++)
 		{
 			
-			if (abs(solutions[ii]-expected_solutions[jj])<1e-5)
+			if (abs(solutions[ii]-expected_solutions[jj])<accuracy)
 				soln_counter++;
 		}
 		BOOST_CHECK_EQUAL(soln_counter,1);
