@@ -32,12 +32,19 @@
 
 namespace nups {
 	namespace solver {
-		template <int degree, typename PolyT>
+
+
+		/**
+		\brief The base solver class for NUPS.  Uses CRTP.
+
+		\param degree The degree of the polynomial being solved.
+		\param PolyT The type of polynomial being solved.  Seems to duplicate degree.
+
+		\todo Eliminate Degree
+		*/
+		template <int degree, class PolyT>
 		struct SolverBase
 		{
-			enum {
-				Degree = degree
-			};
 
 
 			SolverBase(){}
@@ -45,10 +52,11 @@ namespace nups {
 			/**
 			\brief Solve a quadratic equation
 
-			\param[in] coefficients The input coefficients.  Assumed to be real.
-			\param[out] solutions The output, computed solutions
-			*/
+			\param[in] coefficients The input coefficients.  May be complex or real.
+			\param[out] solutions The output, computed solutions.  Must be complex.
 
+			You may put in a monic or non-monic polynomial to this function.
+			*/
 			template<typename CoeffT>
 			void Solve(std::vector<typename NumTraits<CoeffT>::ComplexType>& solutions, std::vector<CoeffT> const& coefficients)
 			{
@@ -56,10 +64,15 @@ namespace nups {
 			}
 
 
+			/**
+			\brief Sharpens using Newton's method, interpreting the last entry in coeffs as the leading coefficient.
+
+			\see SharpenMonic
+			*/
 			template<typename SolnT, typename CoeffT>
 			static void SharpenNonMonic(std::vector<SolnT>& solutions, std::vector<CoeffT> const& coeffs, unsigned num_iterations)
 			{
-				for (unsigned int ii=0; ii<num_iterations; ++ii)
+				for (unsigned int ii(0); ii<num_iterations; ++ii)
 				{
 					for (typename std::vector<SolnT>::iterator iter=solutions.begin(); iter!=solutions.end(); ++iter)
 					{
@@ -68,16 +81,26 @@ namespace nups {
 				}
 			}
 
+
+			/**
+			\brief Sharpens using Newton's method, assuming the leading coefficient is 1, and was omitted.
+
+			\see SharpenNonMonic
+			*/
 			template<typename SolnT, typename CoeffT>
 			static void SharpenMonic(std::vector<SolnT>& solutions, std::vector<CoeffT> const& coeffs, unsigned num_iterations)
 			{
-				for (unsigned int ii=0; ii<num_iterations; ++ii)
+				for (unsigned int ii(0); ii<num_iterations; ++ii)
 					for (typename std::vector<SolnT>::iterator iter=solutions.begin(); iter!=solutions.end(); ++iter)
 						*iter -= EvaluatePolyMonic(*iter,coeffs)/EvaluateDerivMonic(*iter,coeffs);
 
 			}
 
-
+			/**
+			\brief Evaluates a polynomial, interpreting the last entry in the vector of coefficients as the leading coefficient.
+			
+			\see EvaluatePolyMonic
+			*/
 			template<typename SolnT, typename CoeffT>
 			static SolnT EvaluatePolyNonMonic(SolnT const& x, std::vector<CoeffT> const& coeffs)
 			{
@@ -90,7 +113,13 @@ namespace nups {
 				return f;
 			}
 
-			// assumes MONIC POLYNOMIAL, with omitted 1 at the front.
+			/**
+			\brief Evaluates a polynomial, assuming the leading coefficient is 1, and was omitted.
+
+			assumes MONIC POLYNOMIAL, with omitted 1 at the front.
+
+			\see EvaluatePolyNonMonic
+			*/
 			template<typename SolnT, typename CoeffT>
 			static SolnT EvaluatePolyMonic(SolnT const& x, std::vector<CoeffT> const& coeffs)
 			{	
@@ -256,15 +285,34 @@ namespace nups {
 		}; // Quartic
 
 
+
+		/**
+		Class for solving arbitrary univariate octic polynomials.  
+
+		\tparam PredictorT The predictor method to be used during factorization.  Default is classic RK4.
+		\tparam StartT The method for generating start points for the factorization.  Default is UnitCoefficient.
+		*/
 		template< template<class> class PredictorT = nups::predict::RK4,
 				  template<int,int> class StartT = nups::factor::UnitCoefficient>
 		struct Octic : public SolverBase<8, Octic< PredictorT, StartT > >
 		{	
+			typedef PredictorT<OcticLinear> Predictor;
+
+
+
+			/**
+			\brief Constructor for an octic solver
+
+			\param sharpens The number of sharpen operations performed on the final solutions.
+			\param steps The number of predict steps taken during factorization.
+			\param corrects_during The number of Newton corrections taken after each step of the homotopy for the factorization.
+			\param corrects_after The number of Newton corrections taken after factorization, but before solution of the factored quartics.
+			*/
 			Octic(unsigned sharpens = 5, unsigned steps = 20, unsigned corrects_during = 5, unsigned corrects_after = 5) : num_sharpens_(sharpens), factorizer_(steps, corrects_during, corrects_after)
 			{
 			}
 
-			typedef PredictorT<OcticLinear> Predictor;
+
 
 			template<typename CoeffT>
 			void SolveWithComplexMonic(std::vector<typename NumTraits<CoeffT>::ComplexType>& solutions, std::vector<CoeffT> const& coefficients)
@@ -301,7 +349,7 @@ namespace nups {
 		}; // Octic
 
 
-		template<template<class> class PredictorT,
+		template<template<class> class PredictorT = nups::predict::RK4,
 				 template<int,int> class StartT = nups::factor::UnitCoefficient>
 		struct Decic : public SolverBase<10, Decic<PredictorT,StartT> >
 		{

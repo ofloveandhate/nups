@@ -2,7 +2,10 @@
 
 generated_documentation
 test-suite.log
-nups_test*
+nups_test
+nups_test.log
+nups_test.trs
+
 .dirstamp
 
 .DS_Store
