@@ -6,6 +6,8 @@ nups_test
 nups_test.log
 nups_test.trs
 
+nups-*
+
 .dirstamp
 
 .DS_Store

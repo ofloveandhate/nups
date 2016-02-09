@@ -9,6 +9,7 @@ lib_LTLIBRARIES += libnups.la
 
 nups_sources = \
 	include/nups/nups.hpp \
+	include/nups/predict.hpp \
 	include/nups/polynomial_solve.hpp \
 	include/nups/linear_solve.hpp \
 	include/nups/factor.hpp \
@@ -18,6 +19,7 @@ nups_sources = \
 
 rootinclude_HEADERS += \
 	include/nups/nups.hpp \
+	include/nups/predict.hpp \
 	include/nups/polynomial_solve.hpp \
 	include/nups/linear_solve.hpp \
 	include/nups/factor.hpp \

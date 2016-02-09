@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(solve_random_octic_xxx_times)
 	double accuracy(1e-5);
 	unsigned num_misses = 0;
 
-	nups::solver::Octic<> octic_solver(accuracy);
+	nups::solver::Octic<nups::predict::RKKC45> octic_solver(accuracy);
 
 
 	for (unsigned solve_counter = 0; solve_counter < num_solves; solve_counter++)
