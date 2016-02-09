@@ -57,8 +57,8 @@ AC_SEARCH_LIBS([cos], [m], [], [AC_MSG_ERROR([unable to find the cos() function]
 
 
 
-AX_BOOST_BASE([1.55],, [AC_MSG_ERROR([Nups needs Boost at least 1.55, but it was not found in your system])])
-AX_BOOST_UNIT_TEST_FRAMEWORK
+AX_BOOST_BASE([1.55], [AX_BOOST_UNIT_TEST_FRAMEWORK], [AC_MSG_WARN([NUPS test suite needs Boost at least 1.55, but it was not found in your system])])
+
 
 AM_CONFIG_HEADER(include/nups/config.h)
 
