@@ -40,7 +40,7 @@ namespace nups {
 		\param degree The degree of the polynomial being solved.
 		\param PolyT The type of polynomial being solved.  Seems to duplicate degree.
 
-		\todo Eliminate Degree
+		\todo Eliminate degree as a template type.  Should be coupled with PolyT
 		*/
 		template <int degree, class PolyT>
 		struct SolverBase
@@ -208,7 +208,9 @@ namespace nups {
 		};
 
 
-
+		/**
+		\brief Solver functor for solving degree two polynomials.
+		*/
 		struct Quadratic : public SolverBase<2, Quadratic>
 		{
 
@@ -228,6 +230,9 @@ namespace nups {
 		}; // Quadratic
 
 
+		/**
+		\brief Solver functor for solving degree four polynomials.
+		*/
 		struct Quartic : public SolverBase<4, Quartic>
 		{
 			template<typename CoeffT>
@@ -317,12 +322,16 @@ namespace nups {
 			\param corrects_during The number of Newton corrections taken after each step of the homotopy for the factorization.
 			\param corrects_after The number of Newton corrections taken after factorization, but before solution of the factored quartics.
 			*/
-			Octic(double final_tolerance, unsigned max_iterations_final = 7, unsigned steps = 20, unsigned corrects_during = 7, unsigned corrects_after = 7) : max_iterations_(max_iterations_final), final_tolerance_(final_tolerance), factorizer_(steps, corrects_during, corrects_after)
+			Octic(double final_tolerance, unsigned max_iterations_final = 7, unsigned steps = 10, unsigned corrects_during = 7, unsigned corrects_after = 7) : max_iterations_(max_iterations_final), final_tolerance_(final_tolerance), factorizer_(steps, corrects_during, corrects_after)
 			{
 			}
 
 
+			/**
+			\brief Solve a monic octic.  
 
+			Intended to be called from the base solver, but you can call it yourself if you need to
+			*/
 			template<typename CoeffT>
 			void SolveWithComplexMonic(std::vector<typename NumTraits<CoeffT>::ComplexType>& solutions, std::vector<CoeffT> const& coefficients)
 			{	

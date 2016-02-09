@@ -114,6 +114,59 @@ namespace nups {
 			}
 		};
 
+
+
+
+		template<typename LinearSolverT>
+		struct RKKC45 : public PredictorBase<RKKC45<LinearSolverT> >
+		{
+			typedef LinearSolverT LinSolver;
+
+			/**
+			Fifth-order Cash-Karp predictor, using a linear solver provided as a template type.
+			*/
+			template<typename NumT>
+			static void DoPredict(std::vector<NumT> & delta_x, std::vector<NumT> const& x, std::vector<NumT> const& rhs, typename NumTraits<NumT>::RealType const& delta_t)
+			{
+				std::vector<NumT> k1, k2, k3, k4, k5, k6;
+
+				// get the first prediction, the euler step
+				LinearSolverT::Solve(k1, x, rhs);
+
+
+				// use the k1 to compute k2.  
+				std::vector<NumT> x_2 = x;
+				for (unsigned ii=0; ii<LinearSolverT::Degree; ii++)
+					x_2[ii] += delta_t/NumT(5)*k1[ii];
+				LinearSolverT::Solve(k2, x_2, rhs);
+
+				// use the k2 to compute k3.  
+				for (unsigned ii=0; ii<LinearSolverT::Degree; ii++)
+					x_2[ii] = x[ii] + delta_t*(NumT(3)/NumT(40)*k1[ii] + NumT(9)/NumT(40)*k2[ii]);
+				LinearSolverT::Solve(k3, x_2, rhs);
+
+				// use the k3 to compute k4.  
+				for (unsigned ii=0; ii<LinearSolverT::Degree; ii++)
+					x_2[ii] = x[ii] + delta_t*(NumT(3)/NumT(10)*k1[ii] + NumT(-9)/NumT(10)*k2[ii] + NumT(6)/NumT(5)*k3[ii]);
+				LinearSolverT::Solve(k4, x_2, rhs);
+
+				// use the k4 to compute k5.  
+				for (unsigned ii=0; ii<LinearSolverT::Degree; ii++)
+					x_2[ii] = x[ii] + delta_t*(NumT(-11)/NumT(54)*k1[ii] + NumT(5)/NumT(2)*k2[ii] + NumT(-70)/NumT(27)*k3[ii] + NumT(35)/NumT(27)*k4[ii]);
+				LinearSolverT::Solve(k5, x_2, rhs);
+
+				// use the k5 to compute k6.  
+				for (unsigned ii=0; ii<LinearSolverT::Degree; ii++)
+					x_2[ii] = x[ii] + delta_t*(NumT(1631)/NumT(55296)*k1[ii] + NumT(175)/NumT(512)*k2[ii] + NumT(575)/NumT(13824)*k3[ii] + NumT(44275)/NumT(110592)*k4[ii] + NumT(253)/NumT(4096)*k5[ii]);
+				LinearSolverT::Solve(k6, x_2, rhs);
+
+				// finally, combine the results of the above predictions, using a weighted sum
+				delta_x.resize(LinearSolverT::Degree);
+				for (unsigned ii=0; ii<LinearSolverT::Degree; ii++)
+					delta_x[ii] = delta_t * (NumT(37)/NumT(378)*k1[ii] + /* 0 */ NumT(250)/NumT(621)*k3[ii] + NumT(125)/NumT(594)*k4[ii] + /* 0 */ NumT(512)/NumT(1771)*k6[ii]);
+
+			}
+		};
 	} // re: nups::predict
 
 
