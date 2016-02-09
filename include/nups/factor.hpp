@@ -96,6 +96,12 @@ namespace nups {
 		template<typename PolyT, typename StartT>
 		struct FactorizerBase
 		{
+
+			FactorizerBase(unsigned num_steps, unsigned num_corrects_during, unsigned num_corrects_after) : num_steps_(num_steps), num_corrects_during_(num_corrects_during), num_corrects_after_(num_corrects_after)
+			{
+			}
+
+
 			/**
 			Factors the polynomial represented by p into two polynomials, r and s.
 
@@ -104,7 +110,7 @@ namespace nups {
 			\param[int] p The input monic polynomial, which you want to factor.
 			*/
 			template<typename NumT>
-			static void Factor(std::vector<typename NumTraits<NumT>::ComplexType> & r, std::vector<typename NumTraits<NumT>::ComplexType> & s, std::vector<NumT> const& p)
+			void Factor(std::vector<typename NumTraits<NumT>::ComplexType> & r, std::vector<typename NumTraits<NumT>::ComplexType> & s, std::vector<NumT> const& p)
 			{
 				if (p.size()!=PolyT::Degree && p.size()!=PolyT::Degree+1)
 				{
@@ -130,24 +136,22 @@ namespace nups {
 			}
 
 		private:
+
+			unsigned num_steps_;
+			unsigned num_corrects_during_;
+			unsigned num_corrects_after_;
+
 			/**
 			\brief Factors a monic univariate polynomial into two lower-degree monic polynomials.
 			*/
 			template<typename NumT>
-			static void DoFactorMonic(std::vector<typename NumTraits<NumT>::ComplexType> & r, std::vector<typename NumTraits<NumT>::ComplexType> & s, std::vector<NumT> const& a)
+			void DoFactorMonic(std::vector<typename NumTraits<NumT>::ComplexType> & r, std::vector<typename NumTraits<NumT>::ComplexType> & s, std::vector<NumT> const& a)
 			{
-
-				unsigned num_steps = 20;
-				unsigned num_corrects_during = 5;
-				unsigned num_corrects_after = 5;
-
-
-
 				typedef typename NumTraits<NumT>::RealType Real;
 				typedef typename NumTraits<NumT>::ComplexType Complex;
 
 				Real t(1);
-				Real delta_t(Real(-1)/num_steps);
+				Real delta_t(Real(-1)/num_steps_);
 
 				std::vector<Complex> delta_x(PolyT::Degree);
 				std::vector<Complex> x(PolyT::Degree);
@@ -168,7 +172,7 @@ namespace nups {
 
 				
 				
-				for (unsigned n=0; n<num_steps; ++n)
+				for (unsigned n=0; n<num_steps_; ++n)
 				{
 
 					PolyT::Predictor::Predict(delta_x, x, a_star_minus_a, delta_t);
@@ -178,11 +182,11 @@ namespace nups {
 
 					t += delta_t;
 
-					for (unsigned kk=0; kk<num_corrects_during; kk++)
+					for (unsigned kk=0; kk<num_corrects_during_; kk++)
 						Correct(x,a,a_star,t);
 				}
 
-				for (unsigned kk=0; kk<num_corrects_after; kk++)
+				for (unsigned kk=0; kk<num_corrects_after_; kk++)
 					Correct(x,a);
 
 				// here we reverse the order of the coefficients back into `subscripts matching`.
@@ -259,10 +263,13 @@ namespace nups {
 				  DegreeFactorS = 4
 				 };
 
+			typedef FactorizerBase<Octic<PredictorT, StartT >, StartT<4,4> > Factorizer;
 			typedef PredictorT Predictor;
 
 			
-
+			Octic(unsigned num_steps, unsigned num_corrects_during, unsigned num_corrects_after) : Factorizer(num_steps, num_corrects_during, num_corrects_after)
+			{
+			}
 
 			template<typename NumT>
 			static void EvaluateF(std::vector<NumT> & f, std::vector<NumT> const& rs)

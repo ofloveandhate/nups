@@ -39,6 +39,9 @@ namespace nups {
 				Degree = degree
 			};
 
+
+			SolverBase(){}
+
 			/**
 			\brief Solve a quadratic equation
 
@@ -47,7 +50,7 @@ namespace nups {
 			*/
 
 			template<typename CoeffT>
-			static void Solve(std::vector<typename NumTraits<CoeffT>::ComplexType>& solutions, std::vector<CoeffT> const& coefficients)
+			void Solve(std::vector<typename NumTraits<CoeffT>::ComplexType>& solutions, std::vector<CoeffT> const& coefficients)
 			{
 				return SolveWithComplex(solutions, coefficients);
 			}
@@ -140,7 +143,7 @@ namespace nups {
 
 
 			template<typename CoeffT>
-			static void SolveWithComplex(std::vector<typename NumTraits<CoeffT>::ComplexType>& solutions, std::vector<CoeffT> const& coefficients)
+			void SolveWithComplex(std::vector<typename NumTraits<CoeffT>::ComplexType>& solutions, std::vector<CoeffT> const& coefficients)
 			{
 
 				if (coefficients.size()!=degree+1 && coefficients.size()!=degree)
@@ -158,18 +161,11 @@ namespace nups {
 					for (unsigned ii = 0; ii < degree; ++ii)
 						re_scaled_coefficients[ii] = coefficients[ii] / coefficients[degree];
 
-					return PolyT::SolveWithComplexMonic(solutions, re_scaled_coefficients);
+					return static_cast< PolyT * >( this )->SolveWithComplexMonic(solutions, re_scaled_coefficients);
 				}
 				else
-					PolyT::SolveWithComplexMonic(solutions, coefficients);
+					return static_cast< PolyT * >( this )->SolveWithComplexMonic(solutions, coefficients);
 			}
-
-
-
-
-
-
-
 
 		};
 
@@ -179,7 +175,7 @@ namespace nups {
 		{
 
 			template<typename CoeffT>
-			static void SolveWithComplexMonic(std::vector<typename NumTraits<CoeffT>::ComplexType>& solutions, std::vector<CoeffT> const& coefficients)
+			void SolveWithComplexMonic(std::vector<typename NumTraits<CoeffT>::ComplexType>& solutions, std::vector<CoeffT> const& coefficients)
 			{	
 				typedef typename NumTraits<CoeffT>::ComplexType Real;
 				typedef typename NumTraits<CoeffT>::ComplexType Complex;
@@ -197,7 +193,7 @@ namespace nups {
 		struct Quartic : public SolverBase<4, Quartic>
 		{
 			template<typename CoeffT>
-			static void SolveWithComplexMonic(std::vector<typename NumTraits<CoeffT>::ComplexType>& solutions, std::vector<CoeffT> const& coefficients)
+			void SolveWithComplexMonic(std::vector<typename NumTraits<CoeffT>::ComplexType>& solutions, std::vector<CoeffT> const& coefficients)
 			{	
 				typedef typename NumTraits<CoeffT>::ComplexType Real;
 				typedef typename NumTraits<CoeffT>::ComplexType Complex;
@@ -264,26 +260,29 @@ namespace nups {
 				  template<int,int> class StartT = nups::factor::UnitCoefficient>
 		struct Octic : public SolverBase<8, Octic< PredictorT, StartT > >
 		{	
+			Octic(unsigned sharpens = 5, unsigned steps = 20, unsigned corrects_during = 5, unsigned corrects_after = 5) : num_sharpens_(sharpens), factorizer_(steps, corrects_during, corrects_after)
+			{
+			}
+
 			typedef PredictorT<OcticLinear> Predictor;
 
 			template<typename CoeffT>
-			static void SolveWithComplexMonic(std::vector<typename NumTraits<CoeffT>::ComplexType>& solutions, std::vector<CoeffT> const& coefficients)
+			void SolveWithComplexMonic(std::vector<typename NumTraits<CoeffT>::ComplexType>& solutions, std::vector<CoeffT> const& coefficients)
 			{	
 
 				typedef typename NumTraits<CoeffT>::ComplexType Real;
 				typedef typename NumTraits<CoeffT>::ComplexType Complex;
 
-				unsigned num_sharpens = 5;
 
 				if (coefficients.size()!=8)
 					throw std::runtime_error("solving a monic degree 8 polynomial requires 8 coefficients.");
 
 				std::vector<Complex> factor_coeffs_1, factor_coeffs_2;
-				factor::Octic<Predictor,StartT>::Factor(factor_coeffs_1, factor_coeffs_2, coefficients);
+				factorizer_.Factor(factor_coeffs_1, factor_coeffs_2, coefficients);
 
 				std::vector<Complex> solns_temp_1, solns_temp_2;
-				solver::Quartic::Solve(solns_temp_1, factor_coeffs_1);
-				solver::Quartic::Solve(solns_temp_2, factor_coeffs_2);
+				quartic_solver_.Solve(solns_temp_1, factor_coeffs_1);
+				quartic_solver_.Solve(solns_temp_2, factor_coeffs_2);
 
 
 				solutions.resize(8);
@@ -293,9 +292,12 @@ namespace nups {
 				for (unsigned ii = 0; ii < 4; ++ii)
 					solutions[ii+4] = solns_temp_2[ii];
 
-				Octic::SharpenMonic(solutions, coefficients, num_sharpens);
+				this->SharpenMonic(solutions, coefficients, num_sharpens_);
 			}
 
+			factor::Octic<Predictor,StartT> factorizer_;
+			solver::Quartic quartic_solver_;
+			unsigned num_sharpens_;
 		}; // Octic
 
 
@@ -306,7 +308,7 @@ namespace nups {
 			typedef PredictorT<DecicLinear> Predictor;
 
 			template<typename CoeffT>
-			static void SolveWithComplexMonic(std::vector<typename NumTraits<CoeffT>::ComplexType>& solutions, std::vector<CoeffT> const& coefficients)
+			void SolveWithComplexMonic(std::vector<typename NumTraits<CoeffT>::ComplexType>& solutions, std::vector<CoeffT> const& coefficients)
 			{	
 				typedef typename NumTraits<CoeffT>::ComplexType Real;
 				typedef typename NumTraits<CoeffT>::ComplexType Complex;
@@ -319,8 +321,8 @@ namespace nups {
 
 
 				std::vector<Complex> solns_temp_1, solns_temp_2;
-				solver::Octic<PredictorT>::Solve(solns_temp_1, factor_coeffs_1);
-				solver::Quadratic::Solve(solns_temp_2, factor_coeffs_2);
+				octic_solver_.Solve(solns_temp_1, factor_coeffs_1);
+				quadratic_solver_.Solve(solns_temp_2, factor_coeffs_2);
 
 
 				solutions.resize(10);
@@ -330,6 +332,9 @@ namespace nups {
 				for (unsigned ii = 0; ii < 2; ++ii)
 					solutions[ii+8] = solns_temp_2[ii];
 			}
+
+			solver::Octic<PredictorT> octic_solver_;
+			solver::Quadratic quadratic_solver_;
 
 		}; // Decic
 
