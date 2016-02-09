@@ -260,8 +260,9 @@ namespace nups {
 		}; // Quartic
 
 
-		template< template<class> class PredictorT = nups::predict::RK4>
-		struct Octic : public SolverBase<8, Octic< PredictorT > >
+		template< template<class> class PredictorT = nups::predict::RK4,
+				  template<int,int> class StartT = nups::factor::UnitCoefficient>
+		struct Octic : public SolverBase<8, Octic< PredictorT, StartT > >
 		{	
 			typedef PredictorT<OcticLinear> Predictor;
 
@@ -278,7 +279,7 @@ namespace nups {
 					throw std::runtime_error("solving a monic degree 8 polynomial requires 8 coefficients.");
 
 				std::vector<Complex> factor_coeffs_1, factor_coeffs_2;
-				factor::Octic<Predictor>::Factor(factor_coeffs_1, factor_coeffs_2, coefficients);
+				factor::Octic<Predictor,StartT>::Factor(factor_coeffs_1, factor_coeffs_2, coefficients);
 
 				std::vector<Complex> solns_temp_1, solns_temp_2;
 				solver::Quartic::Solve(solns_temp_1, factor_coeffs_1);
@@ -298,8 +299,9 @@ namespace nups {
 		}; // Octic
 
 
-		template<template<class> class PredictorT>
-		struct Decic : public SolverBase<10, Decic<PredictorT> >
+		template<template<class> class PredictorT,
+				 template<int,int> class StartT = nups::factor::UnitCoefficient>
+		struct Decic : public SolverBase<10, Decic<PredictorT,StartT> >
 		{
 			typedef PredictorT<DecicLinear> Predictor;
 
@@ -313,7 +315,7 @@ namespace nups {
 					throw std::runtime_error("solving a monic degree 10 polynomial requires 10 coefficients.");
 
 				std::vector<Complex> factor_coeffs_1, factor_coeffs_2;
-				factor::Decic::Factor(factor_coeffs_1, factor_coeffs_2, coefficients);
+				factor::Decic<Predictor,StartT>::Factor(factor_coeffs_1, factor_coeffs_2, coefficients);
 
 
 				std::vector<Complex> solns_temp_1, solns_temp_2;

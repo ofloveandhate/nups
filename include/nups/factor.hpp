@@ -31,11 +31,77 @@ namespace nups {
 
 	namespace factor {
 
-		template<typename PolyT>
+
+		template<typename T>
+		struct StartPointGenerator
+		{
+		};
+
+
+		template<int DegreeFactorR, int DegreeFactorS>
+		struct UnitCoefficient : StartPointGenerator<UnitCoefficient<DegreeFactorR, DegreeFactorS> >
+		{
+			/**
+			\brief Generate a start point for the homotopy factoring a desired polynomial.
+
+			\param[out] rs_start The generated start point
+			*/
+			template<typename NumT>
+			static void Generate(std::vector<NumT> & rs_start)
+			{
+				rs_start.resize(DegreeFactorR+DegreeFactorS);
+				for (unsigned ii(0); ii<DegreeFactorR; ++ii)
+					rs_start[ii] = nups::Random<NumT>::Generate();
+
+				for (unsigned ii(0); ii<DegreeFactorS; ++ii)
+					rs_start[ii+DegreeFactorR] = nups::Random<NumT>::Generate();
+			}
+		};
+
+
+		template<int DegreeFactorR, int DegreeFactorS>
+		struct BinomialCoefficient : StartPointGenerator<BinomialCoefficient<DegreeFactorR, DegreeFactorS> >
+		{
+			/**
+			\brief Generate a start point for the homotopy factoring a desired polynomial.
+
+			\param[out] rs_start The generated start point
+			*/
+			template<typename NumT>
+			static void Generate(std::vector<NumT> & rs_start)
+			{
+				rs_start.resize(DegreeFactorR+DegreeFactorS);
+				unsigned counter(0);
+				for (unsigned ii(0); ii<DegreeFactorR; ++ii)
+					rs_start[ii] = nups::Random<NumT>::Generate()*NChooseK<typename NumTraits<NumT>::RealType>(DegreeFactorR,counter++);
+
+				counter = 0;
+				for (unsigned ii(0); ii<DegreeFactorS; ++ii)
+					rs_start[ii+DegreeFactorR] = nups::Random<NumT>::Generate()*NChooseK<typename NumTraits<NumT>::RealType>(DegreeFactorS,counter++);
+
+			}
+		};
+
+
+
+
+
+
+
+
+
+		/**
+		\brief Base class for factoring algorithms
+		*/
+		template<typename PolyT, typename StartT>
 		struct FactorizerBase
 		{
 			/**
 			Factors the polynomial represented by p into two polynomials, r and s.
+
+			\param[out] r The higher degree of the two output monics.
+			\param[out] s The lower degree of the two output monics.
+			\param[int] p The input monic polynomial, which you want to factor.
 			*/
 			template<typename NumT>
 			static void Factor(std::vector<typename NumTraits<NumT>::ComplexType> & r, std::vector<typename NumTraits<NumT>::ComplexType> & s, std::vector<NumT> const& p)
@@ -59,12 +125,14 @@ namespace nups {
 					for (unsigned ii = 0; ii < PolyT::Degree; ++ii)
 						re_ordered_coefficients[PolyT::Degree-1 - ii] = p[ii];
 				}
-
+				// push off the factoring to the private function which assumes monic.
 				return PolyT::DoFactorMonic(r, s, re_ordered_coefficients);
 			}
 
 		private:
-			// factors a monic octic univariate polynomial into two quartics.
+			/**
+			\brief Factors a monic univariate polynomial into two lower-degree monic polynomials.
+			*/
 			template<typename NumT>
 			static void DoFactorMonic(std::vector<typename NumTraits<NumT>::ComplexType> & r, std::vector<typename NumTraits<NumT>::ComplexType> & s, std::vector<NumT> const& a)
 			{
@@ -90,7 +158,7 @@ namespace nups {
 
 
 				// make the start point
-				GenerateStartPoint(x);
+				StartT::Generate(x);
 
 				// now, we need to feed the start point into the polynomial to generate the random coefficients, a_star  (a^\ast).
 				PolyT::EvaluateF(a_star, x);
@@ -128,48 +196,29 @@ namespace nups {
 			}
 
 
-			template<typename NumT, bool UseBinomial = false>
-			static void GenerateStartPoint(std::vector<NumT> & rs_start)
-			{
-				if (UseBinomial)
-				{
-					unsigned counter(0);
-					for (unsigned ii(0); ii<PolyT::DegreeFactorR; ++ii)
-						rs_start[ii] = nups::Random<NumT>::Generate()*NChooseK<typename NumTraits<NumT>::RealType>(PolyT::DegreeFactorR,counter++);
-
-					counter = 0;
-					for (unsigned ii(0); ii<PolyT::DegreeFactorS; ++ii)
-						rs_start[ii+PolyT::DegreeFactorR] = nups::Random<NumT>::Generate()*NChooseK<typename NumTraits<NumT>::RealType>(PolyT::DegreeFactorS,counter++);
-				}
-				else
-				{
-					for (unsigned ii(0); ii<PolyT::DegreeFactorR; ++ii)
-						rs_start[ii] = nups::Random<NumT>::Generate();
-
-					for (unsigned ii(0); ii<PolyT::DegreeFactorS; ++ii)
-						rs_start[ii+PolyT::DegreeFactorR] = nups::Random<NumT>::Generate();
-				}
-			}
-
-			template<typename AStarNumT, typename ANumT>
-			static void A_Star_Minus_A(std::vector<AStarNumT> & a_star_minus_a, std::vector<AStarNumT> & a_star, std::vector<ANumT> const& a)
-			{
+			template<typename NumT>
+			static void A_Star_Minus_A(std::vector<typename NumTraits<NumT>::ComplexType> & a_star_minus_a, std::vector<typename NumTraits<NumT>::ComplexType> & a_star, std::vector<NumT> const& a)
+			{	
+				a_star_minus_a.resize(PolyT::Degree);
 				for (unsigned ii=0; ii<PolyT::Degree; ++ii)
 					a_star_minus_a[ii] = a_star[ii] - a[ii];
 			}
 
 
-			template<typename ANumT, typename AStarNumT>
-			static void Correct(std::vector<AStarNumT> & x, std::vector<ANumT> const& a, std::vector<AStarNumT> const& a_star, typename NumTraits<ANumT>::RealType const& t)
+			template<typename NumT>
+			static void Correct(std::vector<typename NumTraits<NumT>::ComplexType> & x, 
+			                    std::vector<NumT> const& a, 
+			                    std::vector<typename NumTraits<NumT>::ComplexType> const& a_star, 
+			                    typename NumTraits<NumT>::RealType const& t)
 			{
-				std::vector<AStarNumT> residuals;
+				std::vector<typename NumTraits<NumT>::ComplexType> residuals(PolyT::Degree);
 
 				PolyT::EvaluateHomotopy(residuals, x, a, a_star, t);
 
 				for (unsigned ii=0; ii<PolyT::Degree; ++ii)
 					residuals[ii] = -residuals[ii];
 
-				std::vector<AStarNumT> delta_x;
+				std::vector<typename NumTraits<NumT>::ComplexType> delta_x;
 				PolyT::Predictor::LinSolver::Solve(delta_x, x, residuals);
 				for (unsigned ii=0; ii<PolyT::Degree; ++ii)
 					x[ii] += delta_x[ii];
@@ -201,8 +250,8 @@ namespace nups {
 
 
 
-		template<typename PredictorT>
-		struct Octic : public FactorizerBase<Octic<PredictorT> >
+		template<typename PredictorT, template<int,int> class StartT>
+		struct Octic : public FactorizerBase<Octic<PredictorT, StartT >, StartT<4,4> >
 		{
 			enum {
 				  Degree = 8,
@@ -211,7 +260,6 @@ namespace nups {
 				 };
 
 			typedef PredictorT Predictor;
-
 
 			
 
@@ -260,7 +308,7 @@ namespace nups {
 				const AStarNumT& s1 = rs[6];
 				const AStarNumT& s0 = rs[7];
 
-				f.resize(8);
+				f.resize(Degree);
 				f[0] = r3+s3 					- (t*a_star[0] + (Real(1)-t)*a[0]);
 				f[1] = r3*s3+r2+s2 				- (t*a_star[1] + (Real(1)-t)*a[1]);
 				f[2] = r2*s3+r3*s2+r1+s1 		- (t*a_star[2] + (Real(1)-t)*a[2]);
@@ -284,7 +332,7 @@ namespace nups {
 				const XNumT& s1 = rs[6];
 				const XNumT& s0 = rs[7];
 
-				f.resize(8);
+				f.resize(Degree);
 				f[0] = r3+s3 					- a[0];
 				f[1] = r3*s3+r2+s2 				- a[1];
 				f[2] = r2*s3+r3*s2+r1+s1 		- a[2];
@@ -300,7 +348,8 @@ namespace nups {
 
 
 		//[ r0*s0, r0*s1 + r1*s0, r0*s2 + r1*s1 + r2*s0, r0*s3 + r1*s2 + r2*s1 + r3*s0, r0 + s0 + r1*s3 + r2*s2 + r3*s1, r1 + s1 + r2*s3 + r3*s2, r2 + s2 + r3*s3, r3 + s3, 1]
-		struct Decic : public FactorizerBase<Decic>
+		template<typename PredictorT, template<int,int> class StartT>
+		struct Decic : public FactorizerBase<Decic<PredictorT, StartT >, StartT<8,2> >
 		{
 			enum {
 				  Degree = 10,
