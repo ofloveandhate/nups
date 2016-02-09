@@ -23,6 +23,7 @@
 #ifndef NUPS_TYPE_TRAITS_HPP
 #define NUPS_TYPE_TRAITS_HPP
 
+#include <cstdlib>
 #include <complex>
 
 namespace nups

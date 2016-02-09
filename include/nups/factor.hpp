@@ -26,6 +26,7 @@
 #include <vector>
 #include <sstream>
 #include "type_traits.hpp"
+#include <stdexcept>
 
 namespace nups {
 
@@ -129,7 +130,7 @@ namespace nups {
 						re_ordered_coefficients[PolyT::Degree-1 - ii] = p[ii];
 				}
 				// push off the factoring to the private function which assumes monic.
-				return PolyT::DoFactorMonic(r, s, re_ordered_coefficients);
+				return static_cast< PolyT * >( this )->DoFactorMonic(r, s, re_ordered_coefficients);
 			}
 
 		private:
