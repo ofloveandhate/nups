@@ -54,15 +54,16 @@ enable_testing()
 IF (BUILD_TESTING)
 	#Setup CMake to run tests
 	
-
 	#Prep for compiling against boost
-	find_package(Boost COMPONENTS unit_test_framework REQUIRED)
-	include_directories (${Boost_INCLUDE_DIRS})
+	find_package(BoostUnitTest COMPONENTS unit_test_framework REQUIRED)
+	include_directories (${BoostUnitTest_INCLUDE_DIRS})
 
 	add_executable(nups_test test/nups_test.cpp) 
-	target_link_libraries(nups_test ${Boost_LIBRARIES} nups)
+	target_link_libraries(nups_test ${BoostUnitTest_LIBRARIES} nups)
 	add_test(NUPS nups_test)
-
+ELSE ()
+	add_custom_target(test_print)
+	add_test(test_print "enable building the nups test by adding the argument to `cmake .. -DBUILD_TESTING`.  ensure you have Boost.UnitTest installed.")
 ENDIF(BUILD_TESTING)
 
 
