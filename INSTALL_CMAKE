@@ -1,0 +1,13 @@
+Nups is configured to be built using either GNU Autotools (autoconf and automake), or CMake.  This document describes building using CMake.  If you are using the autotools build method, consult INSTALL rather than this file.
+
+The cmake build method intends to be run out-of-source.
+
+1. Make build directory.  Assuming you are in nups/, mkdir build && cd build.
+2. Run CMake for nups.  cmake ../
+(2 Optional). If you wish to run the tests, cmake ../ -DBUILD_TESTING
+(2 Optional). By default, Nups is built as a static library.  Even though Nups is almost entirely header, it provides a function for querying whether it is installed.  To build as a shared library, cmake ../ -DBUILD_SHARED_LIBS
+3. make
+4. make install
+5 (Optional). make test
+
+If you have comments or suggestions for this process, please contact the author.
