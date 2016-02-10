@@ -32,14 +32,28 @@ set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib)
 	
 include_directories("${PROJECT_BINARY_DIR}")
 
-add_library(nups ${NUPS_HEADERS} ${NUPS_SOURCES})
+IF (BUILD_SHARED_LIBS)
+	add_library(nups SHARED ${NUPS_HEADERS} ${NUPS_SOURCES})
+ELSE ()
+	add_library(nups STATIC ${NUPS_HEADERS} ${NUPS_SOURCES})
+ENDIF(BUILD_SHARED_LIBS)
 
 
+install(
+		TARGETS nups 
+		ARCHIVE DESTINATION "lib"
+		LIBRARY DESTINATION "lib"
+		COMPONENT library)
 
+install(
+		FILES ${NUPS_HEADERS} 
+		DESTINATION "include/nups")
+
+
+enable_testing()
 IF (BUILD_TESTING)
-
 	#Setup CMake to run tests
-	enable_testing()
+	
 
 	#Prep for compiling against boost
 	find_package(Boost COMPONENTS unit_test_framework REQUIRED)
