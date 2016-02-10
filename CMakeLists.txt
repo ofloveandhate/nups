@@ -33,3 +33,27 @@ set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib)
 include_directories("${PROJECT_BINARY_DIR}")
 
 add_library(nups ${NUPS_HEADERS} ${NUPS_SOURCES})
+
+
+
+IF (BUILD_TESTING)
+
+	#Setup CMake to run tests
+	enable_testing()
+
+	#Prep for compiling against boost
+	find_package(Boost COMPONENTS unit_test_framework REQUIRED)
+	include_directories (${Boost_INCLUDE_DIRS})
+
+	add_executable(nups_test test/nups_test.cpp) 
+	target_link_libraries(nups_test ${Boost_LIBRARIES} nups)
+	add_test(NUPS nups_test)
+
+ENDIF(BUILD_TESTING)
+
+
+
+
+
+
+
