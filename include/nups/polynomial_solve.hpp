@@ -310,9 +310,6 @@ namespace nups {
 				  template<int,int> class StartT = nups::factor::UnitCoefficient>
 		struct Octic : public SolverBase<8, Octic< PredictorT, StartT > >
 		{	
-			typedef PredictorT<OcticLinear> Predictor;
-
-
 
 			/**
 			\brief Constructor for an octic solver
@@ -361,7 +358,7 @@ namespace nups {
 				this->SharpenMonic(solutions, coefficients, final_tolerance_, max_iterations_);
 			}
 
-			factor::Octic<Predictor,StartT> factorizer_;
+			factor::Octic<PredictorT,StartT> factorizer_;
 			solver::Quartic quartic_solver_;
 			double final_tolerance_;
 			unsigned max_iterations_;
@@ -372,8 +369,6 @@ namespace nups {
 				 template<int,int> class StartT = nups::factor::UnitCoefficient>
 		struct Decic : public SolverBase<10, Decic<PredictorT,StartT> >
 		{
-			typedef PredictorT<DecicLinear> Predictor;
-
 			template<typename CoeffT>
 			void SolveWithComplexMonic(std::vector<typename NumTraits<CoeffT>::ComplexType>& solutions, std::vector<CoeffT> const& coefficients)
 			{	
@@ -384,7 +379,7 @@ namespace nups {
 					throw std::runtime_error("solving a monic degree 10 polynomial requires 10 coefficients.");
 
 				std::vector<Complex> factor_coeffs_1, factor_coeffs_2;
-				factor::Decic<Predictor,StartT>::Factor(factor_coeffs_1, factor_coeffs_2, coefficients);
+				factor::Decic<PredictorT,StartT>::Factor(factor_coeffs_1, factor_coeffs_2, coefficients);
 
 
 				std::vector<Complex> solns_temp_1, solns_temp_2;

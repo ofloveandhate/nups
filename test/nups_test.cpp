@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(solve_random_octic_xxx_times)
 	#ifndef NO_RANDOM
 	srand((unsigned) time(NULL));
 	#endif
-	unsigned num_solves = 10000;
+	unsigned num_solves = 100;
 
 	std::clock_t start = std::clock();
    
@@ -128,7 +128,7 @@ BOOST_AUTO_TEST_CASE(solve_random_octic_xxx_times_single_precision)
 	#ifndef NO_RANDOM
 	srand((unsigned) time(NULL));
 	#endif
-	unsigned num_solves = 1000;
+	unsigned num_solves = 100;
 
 	std::clock_t start = std::clock();
 
@@ -306,15 +306,46 @@ BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE(NUPS_factorizations)
 
+
 BOOST_AUTO_TEST_CASE(factor_8_into_4by4)
 {
-	BOOST_CHECK(false && "implemented");
-}
+	typedef nups::factor::Octic<nups::predict::RKKC45, nups::factor::UnitCoefficient > FactorT;
+
+	std::vector<double > solution_r(4);
+	std::vector<double > solution_s(4);
+
+	solution_r[0] = double(0.4693906410582058);
+	solution_r[1] = double(0.0119020695012414);
+	solution_r[2] = double(0.3371226443988815);
+	solution_r[3] = double(0.1621823081932428);
+
+	solution_s[0] = double(0.7942845406839070);
+	solution_s[1] = double(0.3112150420448049);
+	solution_s[2] = double(0.5285331355062127);
+	solution_s[3] = double(0.1656487294997809);
 
 
-BOOST_AUTO_TEST_CASE(factor_10_into_8by2)
-{
-	BOOST_CHECK(false && "implemented");
+	std::vector<double> coefficients(8); // omitting the 1, so it's monic
+
+	FactorT::EvaluateF(coefficients,solution_r,solution_s);
+
+
+	std::vector<dbl> r, s;
+	
+	FactorT factorizer(20,5,5);
+	factorizer.Factor(r,s,coefficients);
+
+	BOOST_CHECK_EQUAL(r.size(),4);
+	BOOST_CHECK_EQUAL(s.size(),4);
+
+	std::vector<dbl> computed_prod_coeffs;
+	FactorT::EvaluateF(computed_prod_coeffs,r,s);
+
+	for (unsigned ii=0; ii<8; ++ii)
+	{
+		BOOST_CHECK(abs(computed_prod_coeffs[ii]-coefficients[ii])< 1e-14);
+	}
+
 }
 
 BOOST_AUTO_TEST_SUITE_END()

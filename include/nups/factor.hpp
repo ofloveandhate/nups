@@ -27,6 +27,7 @@
 #include <sstream>
 #include "type_traits.hpp"
 #include <stdexcept>
+#include "linear_solve.hpp"
 
 namespace nups {
 
@@ -280,8 +281,8 @@ namespace nups {
 
 
 
-		template<typename PredictorT, template<int,int> class StartT>
-		struct Octic : public FactorizerBase<Octic<PredictorT, StartT >, StartT<4,4> >
+		template< template<class> class PredictorT, template<int,int> class StartT>
+		struct Octic : public FactorizerBase< Octic<PredictorT, StartT >, StartT<4,4> >
 		{
 			enum {
 				  Degree = 8,
@@ -290,7 +291,7 @@ namespace nups {
 				 };
 
 			typedef FactorizerBase<Octic<PredictorT, StartT >, StartT<4,4> > Factorizer;
-			typedef PredictorT Predictor;
+			typedef PredictorT<nups::solver::OcticLinear> Predictor;
 
 			
 			Octic(unsigned num_steps, unsigned num_corrects_during, unsigned num_corrects_after) : Factorizer(num_steps, num_corrects_during, num_corrects_after)
@@ -300,6 +301,8 @@ namespace nups {
 			template<typename NumT>
 			static void EvaluateF(std::vector<NumT> & f, std::vector<NumT> const& rs)
 			{
+				f.resize(8);
+
 				const NumT& r3 = rs[0];
 				const NumT& r2 = rs[1];
 				const NumT& r1 = rs[2];
@@ -321,7 +324,31 @@ namespace nups {
 				f[7] = r0*s0;
 			}
 
+			template<typename NumT>
+			static void EvaluateF(std::vector<NumT> & f, std::vector<NumT> const& r, std::vector<NumT> const& s)
+			{
+				f.resize(8);
 
+				const NumT& r0 = r[0];
+				const NumT& r1 = r[1];
+				const NumT& r2 = r[2];
+				const NumT& r3 = r[3];
+
+				const NumT& s0 = s[0];
+				const NumT& s1 = s[1];
+				const NumT& s2 = s[2];
+				const NumT& s3 = s[3];
+				
+				//[r3+s3, r3*s3+r2+s2, r2*s3+r3*s2+r1+s1, r1*s3+r2*s2+r3*s1+r0+s0, r0*s3+r1*s2+r2*s1+r3*s0, r0*s2+r1*s1+r2*s0, r0*s1+r1*s0, r0*s0]
+				f[7] = r3+s3;
+				f[6] = r3*s3+r2+s2;
+				f[5] = r2*s3+r3*s2+r1+s1;
+				f[4] = r1*s3+r2*s2+r3*s1+r0+s0;
+				f[3] = r0*s3+r1*s2+r2*s1+r3*s0;
+				f[2] = r0*s2+r1*s1+r2*s0;
+				f[1] = r0*s1+r1*s0;
+				f[0] = r0*s0;
+			}
 
 			
 
@@ -381,7 +408,7 @@ namespace nups {
 
 
 		//[ r0*s0, r0*s1 + r1*s0, r0*s2 + r1*s1 + r2*s0, r0*s3 + r1*s2 + r2*s1 + r3*s0, r0 + s0 + r1*s3 + r2*s2 + r3*s1, r1 + s1 + r2*s3 + r3*s2, r2 + s2 + r3*s3, r3 + s3, 1]
-		template<typename PredictorT, template<int,int> class StartT>
+		template<template<class> class PredictorT, template<int,int> class StartT>
 		struct Decic : public FactorizerBase<Decic<PredictorT, StartT >, StartT<8,2> >
 		{
 			enum {
