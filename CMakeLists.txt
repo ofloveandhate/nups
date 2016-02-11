@@ -77,11 +77,14 @@ IF (BUILD_TESTING)
 	LINK_DIRECTORIES(${Boost_LIBRARY_DIRS})
 	
 	
+	set(NUPS_TEST_SOURCES
+		test/nups_test.cpp)
 	
-	
-	add_executable(nups_test test/nups_test.cpp) 
+	add_executable(nups_test ${NUPS_TEST_SOURCES}) 
 	target_link_libraries(nups_test ${Boost_LIBRARIES} nups)
-	add_test(NUPS nups_test)
+
+	add_test(NAME nups_test 
+			COMMAND ${CMAKE_BINARY_DIR}/bin/nups_test)
 
 ENDIF(BUILD_TESTING)
 
