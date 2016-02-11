@@ -57,25 +57,13 @@ IF (BUILD_TESTING)
 	enable_testing()
 	#Setup CMake to run tests
 	
-	#set(Boost_USE_STATIC_LIBS       ON)
-	#
-	#add_definitions(-DBOOST_ALL_NO_LIB)  # tell the Boost config system not to automatically select which libraries to link against.
 	
-	#set(Boost_NO_SYSTEM_PATHS 		true)
-	#set(Boost_USE_STATIC_LIBS 		ON)# CACHE BOOL "use static libraries from Boost")
-	set(Boost_USE_MULTITHREADED 	ON)
-	
-	#set(Boost_USE_STATIC_LIBS        OFF)
-	#set(Boost_USE_STATIC_RUNTIME     OFF)
-	add_definitions( -DBOOST_ALL_NO_LIB )
 	add_definitions( -DBOOST_ALL_DYN_LINK )
 	
 	if (WIN32)
-			# disable autolinking in boost
-		
-
-		# force all boost libraries to dynamic link (we already disabled
-		# autolinking, so I don't know why we need this, but we do!)
+		# disable autolinking in boost
+		add_definitions( -DBOOST_ALL_NO_LIB )
+		set(Boost_USE_MULTITHREADED 	ON)
 		
 	endif()	
 	
