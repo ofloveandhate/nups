@@ -42,7 +42,7 @@ namespace nups
 
 		static float NewtonTerminationThreshold() 
 		{
-			return float(1e-5);
+			return 1e-5f;
 		}
 	};
 
@@ -55,7 +55,7 @@ namespace nups
 
 		static float NewtonTerminationThreshold() 
 		{
-			return float(1e-5);
+			return 1e-5f;
 		}
 	};
 
@@ -97,7 +97,7 @@ namespace nups
 	{
 		static float Generate()
 		{
-			return 2*(float(rand())/RAND_MAX-0.5);
+			return 2*(float(rand())/RAND_MAX-0.5f);
 		}
 	};
 
@@ -111,7 +111,7 @@ namespace nups
 				std::uniform_real_distribution<float> distribution(-1.0,1.0);
 				std::complex<float> returnme(distribution(generator), distribution(generator));
 			#else
-				std::complex<float> returnme(2*(float(rand())/RAND_MAX-0.5),2*(float(rand())/RAND_MAX-0.5));
+				std::complex<float> returnme(2*(float(rand())/RAND_MAX-0.5f),2*(float(rand())/RAND_MAX-0.5f));
 			#endif
 			return returnme / float(sqrt(abs(returnme)));
 		}
@@ -123,12 +123,12 @@ namespace nups
 	{
 		T result(1);
 
-		for (int ii = 1; ii <= k; ++ii)
+		for (unsigned ii = 1; ii <= k; ++ii)
 		{
 			result *= (n+1-ii);
 		}
 
-		for (int ii = 1; ii <= k; ++ii)
+		for (unsigned ii = 1; ii <= k; ++ii)
 		{
 			result /= (ii);
 		}

@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_SUITE(NUPS_timing)
 BOOST_AUTO_TEST_CASE(solve_random_octic_xxx_times)
 {
 	#ifndef NO_RANDOM
-	srand(time(NULL));
+	srand((unsigned) time(NULL));
 	#endif
 	unsigned num_solves = 10000;
 
@@ -126,7 +126,7 @@ BOOST_AUTO_TEST_CASE(solve_random_octic_xxx_times)
 BOOST_AUTO_TEST_CASE(solve_random_octic_xxx_times_single_precision)
 {
 	#ifndef NO_RANDOM
-	srand(time(NULL));
+	srand((unsigned) time(NULL));
 	#endif
 	unsigned num_solves = 1000;
 
@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE(solve_random_octic_xxx_times_single_precision)
 	std::vector<std::complex<float> > solutions;
 	std::vector<float> expected_solutions, coefficients;
 
-	float accuracy(1e-3);
+	float accuracy(1e-3f);
 	unsigned num_misses = 0;
 
 	for (unsigned solve_counter = 0; solve_counter < num_solves; solve_counter++)
@@ -429,7 +429,7 @@ BOOST_AUTO_TEST_SUITE(NUPS_solvers)
 BOOST_AUTO_TEST_CASE(solve_octic_8_real_roots)
 {
 	#ifndef NO_RANDOM
-	srand(time(NULL));
+	srand((unsigned) time(NULL));
 	#endif
 	std::vector<std::complex<double> > solutions;
 	std::vector<std::complex<double> > coefficients(9);
