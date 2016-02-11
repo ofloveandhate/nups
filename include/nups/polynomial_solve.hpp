@@ -319,7 +319,7 @@ namespace nups {
 			\param corrects_during The number of Newton corrections taken after each step of the homotopy for the factorization.
 			\param corrects_after The number of Newton corrections taken after factorization, but before solution of the factored quartics.
 			*/
-			Octic(double final_tolerance, unsigned max_iterations_final = 7, unsigned steps = 10, unsigned corrects_during = 7, unsigned corrects_after = 7) : max_iterations_(max_iterations_final), final_tolerance_(final_tolerance), factorizer_(steps, corrects_during, corrects_after)
+			Octic(double final_tolerance, unsigned max_iterations_final = 10, unsigned steps = 10, unsigned corrects_during = 7, unsigned corrects_after = 10) : max_iterations_(max_iterations_final), final_tolerance_(final_tolerance), factorizer_(steps, corrects_during, corrects_after)
 			{
 			}
 

@@ -118,20 +118,21 @@ namespace nups {
 					throw std::runtime_error(error_message.str());
 				}
 
-				std::vector<NumT> re_ordered_coefficients(PolyT::Degree);
+				std::vector<NumT> re_scaled_coefficients(PolyT::Degree);
 
 				if (p.size()==PolyT::Degree+1)
 				{
 					for (unsigned ii = 0; ii < PolyT::Degree; ++ii)
-						re_ordered_coefficients[PolyT::Degree-1 - ii] = p[ii] / p[PolyT::Degree];
+						re_scaled_coefficients[ii] = p[ii] / p[PolyT::Degree];
 				}
 				else
 				{
 					for (unsigned ii = 0; ii < PolyT::Degree; ++ii)
-						re_ordered_coefficients[PolyT::Degree-1 - ii] = p[ii];
+						re_scaled_coefficients[ii] = p[ii];
 				}
 				// push off the factoring to the private function which assumes monic.
-				return static_cast< PolyT * >( this )->DoFactorMonic(r, s, re_ordered_coefficients);
+				return static_cast< PolyT * >( this )->DoFactorMonic(r, s, re_scaled_coefficients);
+
 			}
 
 		private:
@@ -190,14 +191,15 @@ namespace nups {
 					if (Correct(x,a))
 						break;
 
-				// here we reverse the order of the coefficients back into `subscripts matching`.
+
 				r.resize(PolyT::DegreeFactorR);
 				for (unsigned ii = 0; ii < PolyT::DegreeFactorR; ++ii)
-					r[PolyT::DegreeFactorR-1-ii] = x[ii];
+					r[ii] = x[ii];
 
 				s.resize(PolyT::DegreeFactorS);
 				for (unsigned ii = 0; ii < PolyT::DegreeFactorS; ++ii)
-					s[PolyT::DegreeFactorS-1-ii] = x[ii+PolyT::DegreeFactorR];
+					s[ii] = x[ii+PolyT::DegreeFactorR];
+
 			}
 
 
@@ -298,30 +300,32 @@ namespace nups {
 			{
 			}
 
+
+			// THIS FUNCTION USES THE DECENDING COEFFICIENT ORDERING
 			template<typename NumT>
 			static void EvaluateF(std::vector<NumT> & f, std::vector<NumT> const& rs)
 			{
 				f.resize(8);
 
-				const NumT& r3 = rs[0];
-				const NumT& r2 = rs[1];
-				const NumT& r1 = rs[2];
-				const NumT& r0 = rs[3];
+				const NumT& r3 = rs[3];//Reverse
+				const NumT& r2 = rs[2];
+				const NumT& r1 = rs[1];
+				const NumT& r0 = rs[0];
 
-				const NumT& s3 = rs[4];
-				const NumT& s2 = rs[5];
-				const NumT& s1 = rs[6];
-				const NumT& s0 = rs[7];
+				const NumT& s3 = rs[7];
+				const NumT& s2 = rs[6];
+				const NumT& s1 = rs[5];
+				const NumT& s0 = rs[4];
 				
 				//[r3+s3, r3*s3+r2+s2, r2*s3+r3*s2+r1+s1, r1*s3+r2*s2+r3*s1+r0+s0, r0*s3+r1*s2+r2*s1+r3*s0, r0*s2+r1*s1+r2*s0, r0*s1+r1*s0, r0*s0]
-				f[0] = r3+s3;
-				f[1] = r3*s3+r2+s2;
-				f[2] = r2*s3+r3*s2+r1+s1;
-				f[3] = r1*s3+r2*s2+r3*s1+r0+s0;
-				f[4] = r0*s3+r1*s2+r2*s1+r3*s0;
-				f[5] = r0*s2+r1*s1+r2*s0;
-				f[6] = r0*s1+r1*s0;
-				f[7] = r0*s0;
+				f[7] = r3+s3;
+				f[6] = r3*s3+r2+s2;
+				f[5] = r2*s3+r3*s2+r1+s1;
+				f[4] = r1*s3+r2*s2+r3*s1+r0+s0;
+				f[3] = r0*s3+r1*s2+r2*s1+r3*s0;
+				f[2] = r0*s2+r1*s1+r2*s0;
+				f[1] = r0*s1+r1*s0;
+				f[0] = r0*s0;
 			}
 
 			template<typename NumT>
@@ -352,55 +356,56 @@ namespace nups {
 
 			
 
-
+			// THIS FUNCTION USES THE DECENDING COEFFICIENT ORDERING
 			template<typename AStarNumT, typename ANumT>
 			static void EvaluateHomotopy(std::vector<AStarNumT> & f, std::vector<AStarNumT> const& rs, std::vector<ANumT> const& a, std::vector<AStarNumT> const& a_star, typename NumTraits<ANumT>::RealType const& t)
 			{	
 
 				typedef typename NumTraits<ANumT>::RealType Real;
-				const AStarNumT& r3 = rs[0];
-				const AStarNumT& r2 = rs[1];
-				const AStarNumT& r1 = rs[2];
-				const AStarNumT& r0 = rs[3];
+				const AStarNumT& r3 = rs[3];
+				const AStarNumT& r2 = rs[2];
+				const AStarNumT& r1 = rs[1];
+				const AStarNumT& r0 = rs[0];
 
-				const AStarNumT& s3 = rs[4];
-				const AStarNumT& s2 = rs[5];
-				const AStarNumT& s1 = rs[6];
-				const AStarNumT& s0 = rs[7];
+				const AStarNumT& s3 = rs[7];
+				const AStarNumT& s2 = rs[6];
+				const AStarNumT& s1 = rs[5];
+				const AStarNumT& s0 = rs[4];
 
 				f.resize(Degree);
-				f[0] = r3+s3 					- (t*a_star[0] + (Real(1)-t)*a[0]);
-				f[1] = r3*s3+r2+s2 				- (t*a_star[1] + (Real(1)-t)*a[1]);
-				f[2] = r2*s3+r3*s2+r1+s1 		- (t*a_star[2] + (Real(1)-t)*a[2]);
-				f[3] = r1*s3+r2*s2+r3*s1+r0+s0 	- (t*a_star[3] + (Real(1)-t)*a[3]);
-				f[4] = r0*s3+r1*s2+r2*s1+r3*s0 	- (t*a_star[4] + (Real(1)-t)*a[4]);
-				f[5] = r0*s2+r1*s1+r2*s0 		- (t*a_star[5] + (Real(1)-t)*a[5]);
-				f[6] = r0*s1+r1*s0 				- (t*a_star[6] + (Real(1)-t)*a[6]);
-				f[7] = r0*s0 					- (t*a_star[7] + (Real(1)-t)*a[7]);
+				f[7] = r3+s3 					- (t*a_star[7] + (Real(1)-t)*a[7]);
+				f[6] = r3*s3+r2+s2 				- (t*a_star[6] + (Real(1)-t)*a[6]);
+				f[5] = r2*s3+r3*s2+r1+s1 		- (t*a_star[5] + (Real(1)-t)*a[5]);
+				f[4] = r1*s3+r2*s2+r3*s1+r0+s0 	- (t*a_star[4] + (Real(1)-t)*a[4]);
+				f[3] = r0*s3+r1*s2+r2*s1+r3*s0 	- (t*a_star[3] + (Real(1)-t)*a[3]);
+				f[2] = r0*s2+r1*s1+r2*s0 		- (t*a_star[2] + (Real(1)-t)*a[2]);
+				f[1] = r0*s1+r1*s0 				- (t*a_star[1] + (Real(1)-t)*a[1]);
+				f[0] = r0*s0 					- (t*a_star[0] + (Real(1)-t)*a[0]);
 			}
 
+			// THIS FUNCTION USES THE DECENDING COEFFICIENT ORDERING
 			template<typename XNumT, typename ANumT>
 			static void EvaluateHomotopy(std::vector<XNumT> & f, std::vector<XNumT> const& rs, std::vector<ANumT> const& a)
 			{	
-				const XNumT& r3 = rs[0];
-				const XNumT& r2 = rs[1];
-				const XNumT& r1 = rs[2];
-				const XNumT& r0 = rs[3];
+				const XNumT& r3 = rs[3];
+				const XNumT& r2 = rs[2];
+				const XNumT& r1 = rs[1];
+				const XNumT& r0 = rs[0];
 
-				const XNumT& s3 = rs[4];
-				const XNumT& s2 = rs[5];
-				const XNumT& s1 = rs[6];
-				const XNumT& s0 = rs[7];
+				const XNumT& s3 = rs[7];
+				const XNumT& s2 = rs[6];
+				const XNumT& s1 = rs[5];
+				const XNumT& s0 = rs[4];
 
 				f.resize(Degree);
-				f[0] = r3+s3 					- a[0];
-				f[1] = r3*s3+r2+s2 				- a[1];
-				f[2] = r2*s3+r3*s2+r1+s1 		- a[2];
-				f[3] = r1*s3+r2*s2+r3*s1+r0+s0 	- a[3];
-				f[4] = r0*s3+r1*s2+r2*s1+r3*s0 	- a[4];
-				f[5] = r0*s2+r1*s1+r2*s0 		- a[5];
-				f[6] = r0*s1+r1*s0 				- a[6];
-				f[7] = r0*s0 					- a[7];
+				f[7] = r3+s3 					- a[7];
+				f[6] = r3*s3+r2+s2 				- a[6];
+				f[5] = r2*s3+r3*s2+r1+s1 		- a[5];
+				f[4] = r1*s3+r2*s2+r3*s1+r0+s0 	- a[4];
+				f[3] = r0*s3+r1*s2+r2*s1+r3*s0 	- a[3];
+				f[2] = r0*s2+r1*s1+r2*s0 		- a[2];
+				f[1] = r0*s1+r1*s0 				- a[1];
+				f[0] = r0*s0 					- a[0];
 			}
 		};
 
