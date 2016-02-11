@@ -79,9 +79,9 @@ BOOST_AUTO_TEST_SUITE(NUPS_timing)
 BOOST_AUTO_TEST_CASE(solve_random_octic_xxx_times)
 {
 	#ifndef NO_RANDOM
-	srand(time(NULL));
+	srand((unsigned) time(NULL));
 	#endif
-	unsigned num_solves = 10000;
+	unsigned num_solves = 100;
 
 	std::clock_t start = std::clock();
    
@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(solve_random_octic_xxx_times)
 	std::vector<std::complex<double> > solutions;
 	std::vector<double> expected_solutions, coefficients;
 
-	double accuracy(1e-5);
+	double accuracy(1e-7);
 	unsigned num_misses = 0;
 
 	nups::solver::Octic<nups::predict::RKKC45> octic_solver(accuracy);
@@ -126,16 +126,16 @@ BOOST_AUTO_TEST_CASE(solve_random_octic_xxx_times)
 BOOST_AUTO_TEST_CASE(solve_random_octic_xxx_times_single_precision)
 {
 	#ifndef NO_RANDOM
-	srand(time(NULL));
+	srand((unsigned) time(NULL));
 	#endif
-	unsigned num_solves = 1000;
+	unsigned num_solves = 100;
 
 	std::clock_t start = std::clock();
 
 	std::vector<std::complex<float> > solutions;
 	std::vector<float> expected_solutions, coefficients;
 
-	float accuracy(1e-3);
+	float accuracy(1e-3f);
 	unsigned num_misses = 0;
 
 	for (unsigned solve_counter = 0; solve_counter < num_solves; solve_counter++)
@@ -254,40 +254,42 @@ BOOST_AUTO_TEST_CASE(linear_solve_8x8)
 
 	std::vector<std::complex<double> > coeffs(8);
 
-coeffs[0] = std::complex<double>(-0.3151061157083938,-1.3414324935486135);
-coeffs[1] = std::complex<double>(0.5130251277984067,-0.9492387398685719);
-coeffs[2] = std::complex<double>(-0.7175701576689141,-0.4503636396955308);
-coeffs[3] = std::complex<double>(-1.5706863737242078,-1.2271908671607061);
-coeffs[4] = std::complex<double>(-0.5266673941452300,-1.5078131850342797);
-coeffs[5] = std::complex<double>(0.1343329839984859,1.3085501610686945);
-coeffs[6] = std::complex<double>(-0.1757466132541140,-1.0279008815303350);
-coeffs[7] = std::complex<double>(1.4615184079698247,1.3451143295000334);
+	coeffs[0] = std::complex<double>(-0.31510611570839381,-1.34143249354861349);
+	coeffs[1] = std::complex<double>(0.51302512779840670,-0.94923873986857188);
+	coeffs[2] = std::complex<double>(-0.71757015766891408,-0.45036363969553078);
+	coeffs[3] = std::complex<double>(-1.57068637372420783,-1.22719086716070613);
+	coeffs[4] = std::complex<double>(-0.52666739414523001,-1.50781318503427975);
+	coeffs[5] = std::complex<double>(0.13433298399848595,1.30855016106869448);
+	coeffs[6] = std::complex<double>(-0.17574661325411398,-1.02790088153033499);
+	coeffs[7] = std::complex<double>(1.46151840796982468,1.34511432950003340);
 
 
 
-std::vector<std::complex<double> > b(8);
+	std::vector<std::complex<double> > b(8);
 
-b[0] = std::complex<double>(-0.2784213415124605,1.2672413358057288);
-b[1] = std::complex<double>(0.1843749327615239,1.2396624590242373);
-b[2] = std::complex<double>(-0.5963537326230182,-0.6881297149121884);
-b[3] = std::complex<double>(-0.4971761886226711,-0.7590994249738381);
-b[4] = std::complex<double>(0.7538997879176960,-0.8276617521751226);
-b[5] = std::complex<double>(0.6463047638648889,0.5219204693674823);
-b[6] = std::complex<double>(-0.4756291783769999,-1.0239159797433899);
-b[7] = std::complex<double>(2.2253382909024038,-0.9128527205472096);
+	b[0] = std::complex<double>(-0.27842134151246045,1.26724133580572884);
+	b[1] = std::complex<double>(0.18437493276152389,1.23966245902423733);
+	b[2] = std::complex<double>(-0.59635373262301816,-0.68812971491218844);
+	b[3] = std::complex<double>(-0.49717618862267110,-0.75909942497383809);
+	b[4] = std::complex<double>(0.75389978791769596,-0.82766175217512261);
+	b[5] = std::complex<double>(0.64630476386488889,0.52192046936748226);
+	b[6] = std::complex<double>(-0.47562917837699992,-1.02391597974338988);
+	b[7] = std::complex<double>(2.22533829090240376,-0.91285272054720956);
 
 
 
-std::vector<std::complex<double> > expected_solution(8);
+	std::vector<std::complex<double> > expected_solution(8);
 
-expected_solution[0] = std::complex<double>(2.6969283330365772,0.4184387508306890);
-expected_solution[1] = std::complex<double>(-1.0855360585087270,0.0210950704334326);
-expected_solution[2] = std::complex<double>(0.1993241582055479,-4.9826677670055286);
-expected_solution[3] = std::complex<double>(3.7270121880678162,-3.4359598399925901);
-expected_solution[4] = std::complex<double>(-2.9753496745490384,0.8488025849750411);
-expected_solution[5] = std::complex<double>(-0.0167945039196800,1.7816416871906171);
-expected_solution[6] = std::complex<double>(-2.8884713502448576,-3.6373103065930361);
-expected_solution[7] = std::complex<double>(3.3801630124113076,-2.0651567154747932);
+	
+	expected_solution[0] = std::complex<double>(-0.1532478552337886,-0.7250841148775019);
+	expected_solution[1] = std::complex<double>(-0.1686322567223841,-0.0541036118512415);
+	expected_solution[2] = std::complex<double>(1.0633871607149648,0.1425459152301728);
+	expected_solution[3] = std::complex<double>(0.7456799135161363,-0.6594719151601485);
+	expected_solution[4] = std::complex<double>(-0.5840891792903412,0.4100909503210889);
+	expected_solution[5] = std::complex<double>(-0.2066664036839975,-0.6752679511688379);
+	expected_solution[6] = std::complex<double>(-0.8808805207215836,0.2121851805427436);
+	expected_solution[7] = std::complex<double>(1.4796583773862675,-0.2533808053870610);
+
 
 
 
@@ -297,7 +299,7 @@ expected_solution[7] = std::complex<double>(3.3801630124113076,-2.06515671547479
 	BOOST_CHECK_EQUAL(solution.size(),8);
 
 	for (unsigned ii=0; ii<8; ii++)
-		BOOST_CHECK(abs(expected_solution[ii]/solution[ii]-1.)<1e-14);
+		BOOST_CHECK(abs(expected_solution[ii]/solution[ii]-1.)<1e-12);
 }
 
 
@@ -306,15 +308,46 @@ BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE(NUPS_factorizations)
 
+
 BOOST_AUTO_TEST_CASE(factor_8_into_4by4)
 {
-	BOOST_CHECK(false && "implemented");
-}
+	typedef nups::factor::Octic<nups::predict::RKKC45, nups::factor::UnitCoefficient > FactorT;
+
+	std::vector<double > solution_r(4);
+	std::vector<double > solution_s(4);
+
+	solution_r[0] = double(0.4693906410582058);
+	solution_r[1] = double(0.0119020695012414);
+	solution_r[2] = double(0.3371226443988815);
+	solution_r[3] = double(0.1621823081932428);
+
+	solution_s[0] = double(0.7942845406839070);
+	solution_s[1] = double(0.3112150420448049);
+	solution_s[2] = double(0.5285331355062127);
+	solution_s[3] = double(0.1656487294997809);
 
 
-BOOST_AUTO_TEST_CASE(factor_10_into_8by2)
-{
-	BOOST_CHECK(false && "implemented");
+	std::vector<double> coefficients(8); // omitting the 1, so it's monic
+
+	FactorT::EvaluateF(coefficients,solution_r,solution_s);
+
+
+	std::vector<dbl> r, s;
+	
+	FactorT factorizer(20,5,5);
+	factorizer.Factor(r,s,coefficients);
+
+	BOOST_CHECK_EQUAL(r.size(),4);
+	BOOST_CHECK_EQUAL(s.size(),4);
+
+	std::vector<dbl> computed_prod_coeffs;
+	FactorT::EvaluateF(computed_prod_coeffs,r,s);
+
+	for (unsigned ii=0; ii<8; ++ii)
+	{
+		BOOST_CHECK(abs(computed_prod_coeffs[ii]-coefficients[ii])< 1e-14);
+	}
+
 }
 
 BOOST_AUTO_TEST_SUITE_END()
@@ -429,7 +462,7 @@ BOOST_AUTO_TEST_SUITE(NUPS_solvers)
 BOOST_AUTO_TEST_CASE(solve_octic_8_real_roots)
 {
 	#ifndef NO_RANDOM
-	srand(time(NULL));
+	srand((unsigned) time(NULL));
 	#endif
 	std::vector<std::complex<double> > solutions;
 	std::vector<std::complex<double> > coefficients(9);

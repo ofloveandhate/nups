@@ -167,16 +167,16 @@ namespace nups {
 				if (rhs.size()!=8)
 					throw std::runtime_error("there must be 8 variables in the right hand side for octic linear solver");
 
-				const XNumT& r3 = variables[0];
-				const XNumT& r2 = variables[1];
-				const XNumT& r1 = variables[2];
-				const XNumT& r0 = variables[3];
+				const XNumT& r0 = variables[0];
+				const XNumT& r1 = variables[1];
+				const XNumT& r2 = variables[2];
+				const XNumT& r3 = variables[3];
 
-				const XNumT& s3 = variables[4];
-				const XNumT& s2 = variables[5];
-				const XNumT& s1 = variables[6];
-				const XNumT& s0 = variables[7];
-
+				const XNumT& s0 = variables[4];
+				const XNumT& s1 = variables[5];
+				const XNumT& s2 = variables[6];
+				const XNumT& s3 = variables[7];
+				
 				const RHSNumT& b1 = rhs[0];
 				const RHSNumT& b2 = rhs[1];
 				const RHSNumT& b3 = rhs[2];
@@ -189,46 +189,37 @@ namespace nups {
 
 				// first we will solve the problem in the top of the block matrix.
 
-				//[[A B]  [x] = [b]
-				//  C D]] [y]   [c]
+				//[[C D]  [x] = [b]
+				//  A B]] [y]   [c]
 				//
 				//
 				//  since A and B invertible, Ax+By=b is solvable by inverting A.
 				//  
-				//     Ax+By = b
-				//        Ax = b-By
-				//         x = A_inv(b-By)
+				//     Ax+By = c
+				//        Ax = c-By
+				//         x = A_inv(c-By)
 				//  hence, 
-				//      x = A^{-1}(b - B y)
+				//      x = A^{-1}(c - B y)
 				//  then substitute into the C,D,c equation
 
 				solution.resize(8);
 
-				// aq_inv:=aq^(-1):
-				// x:=aq_inv.(B-bq.C);
-				//                Matrix(%id = 18446744078454429446)
-				// lprint(x)
-				// Matrix(4, 1, {
-				//(1, 1) = b1-c1, 
-				//(2, 1) = -s3*(b1-c1)-r3*c1+b2-c2, 
-				//(3, 1) = (s3^2-s2)*(b1-c1)-s3*(-c1*r3+b2-c2)-r2*c1-r3*c2+b3-c3, 
-				//(4, 1) = (-s3^3+2*s2*s3-s1)*(b1-c1)+(s3^2-s2)*(-c1*r3+b2-c2)-s3*(-c1*r2-c2*r3+b3-c3)-r1*c1-r2*c2-r3*c3+b4-c4}, datatype = anything, storage = rectangular, order = Fortran_order, shape = [])
 
 
 				//set up some temporaries			
 				const XNumT z31 =  s3*s3-s2;
 				const XNumT z41 = -s3*s3*s3+XNumT(2)*s2*s3-s1;
 
-				//                        Cx+Dy = c
-				//        C(A^{-1}(b - B y))+Dy = c
-				// C A_inv b - C A_inv B y + Dy = c
-				//           (-C A_inv B + D) y = c - C A_inv b
+				//                        Cx+Dy = b
+				//        C(A^{-1}(c - B y))+Dy = b
+				// C A_inv c - C A_inv B y + Dy = b
+				//           (-C A_inv B + D) y = b - C A_inv c
 				// 
 				// so we need to write the matrix
 				//     (-C A_inv B + D)
 				// into a matrix, and pass it into the dense 4x4 solver.
 				// also, write 
-				//      c - C A_inv b
+				//      b - C A_inv c
 				// into a vector, and pass into the same.
 
 				
@@ -236,105 +227,67 @@ namespace nups {
 				// compute $C A^{-1}$
 
 				// C A^{-1}
-				// Matrix(4, 4, {
-				//(1, 1) = s0-s1*s3+s2*(s3^2-s2)+s3*(-s3^3+2*s2*s3-s1), 
-				//(1, 2) = s1-s2*s3+s3*(s3^2-s2), 
-				//(1, 3) = -s3^2+s2, 
-				//(1, 4) = s3, 
-				//
-				//(2, 1) = -s0*s3+s1*(s3^2-s2)+s2*(-s3^3+2*s2*s3-s1), 
-				//(2, 2) = s0-s1*s3+s2*(s3^2-s2), 
-				//(2, 3) = -s2*s3+s1, 
-				//(2, 4) = s2, 
-				//
-				//(3, 1) = s0*(s3^2-s2)+s1*(-s3^3+2*s2*s3-s1), 
-				//(3, 2) = -s0*s3+s1*(s3^2-s2), 
-				//(3, 3) = -s1*s3+s0, 
-				//(3, 4) = s1, 
-				//
-				//(4, 1) = s0*(-s3^3+2*s2*s3-s1), 
-				//(4, 2) = s0*(s3^2-s2), 
-				//(4, 3) = -s0*s3, 
-				//(4, 4) = s0}, datatype = anything, storage = rectangular, order = Fortran_order, shape = [])
-
-				std::vector<XNumT> w(16);
-				// w = C A^{-1}
-				w[0] = s0-s1*s3 + s2*z31 + s3*z41;
-				w[1] = s1-s2*s3 + s3*z31;
-				w[2] = -z31;
-				w[3] = s3;
+				std::vector<XNumT> C_Ainv(16);
+				// C_Ainv = C A^{-1}
+				C_Ainv[15] = s0-s1*s3 + s2*z31 + s3*z41;
+				C_Ainv[14] = s1-s2*s3 + s3*z31;
+				C_Ainv[13] = -z31;
+				C_Ainv[12] = s3;
 				//---------------------------------------
-				w[4] = -s0*s3 + s1*z31 + s2*z41;
-				w[5] = s0-s1*s3 + s2*z31;
-				w[6] = -s2*s3 + s1;
-				w[7] = s2;
+				C_Ainv[11] = -s0*s3 + s1*z31 + s2*z41;
+				C_Ainv[10] = s0-s1*s3 + s2*z31;
+				C_Ainv[9] = -s2*s3 + s1;
+				C_Ainv[8] = s2;
 				//---------------------------------------
-				w[8] = s0*z31 + s1*z41;
-				w[9] = -s0*s3 + s1*z31;
-				w[10] = -s1*s3 + s0;
-				w[11] = s1;
+				C_Ainv[7] = s0*z31 + s1*z41;
+				C_Ainv[6] = -s0*s3 + s1*z31;
+				C_Ainv[5] = -s1*s3 + s0;
+				C_Ainv[4] = s1;
 				//---------------------------------------
-				w[12] = s0*z41;
-				w[13] = s0*z31;
-				w[14] = -s0*s3;
-				w[15] = s0;
+				C_Ainv[3] = s0*z41;
+				C_Ainv[2] = s0*z31;
+				C_Ainv[1] = -s0*s3;
+				C_Ainv[0] = s0;
 				//---------------------------------------
 
+				const std::vector<XNumT>& w = C_Ainv;
 
-
-				// the following is a dense matrix times B, with B written in terms of the coefficients r_i and s_i.
-				//
-				//B =
-				// [  1,  0,  0, 0]
-				// [ r3,  1,  0, 0]
-				// [ r2, r3,  1, 0]
-				// [ r1, r2, r3, 1]
-				//
-				// Matrix(4, 4, {(1, 1) = m1*r3+m2*r2+m3*r1+m0, (1, 2) = m2*r3+m3*r2+m1, (1, 3) = m3*r3+m2, (1, 4) = m3, (2, 1) = m5*r3+m6*r2+m7*r1+m4, (2, 2) = m6*r3+m7*r2+m5, (2, 3) = m7*r3+m6, (2, 4) = m7, (3, 1) = m10*r2+m11*r1+m9*r3+m8, (3, 2) = m10*r3+m11*r2+m9, (3, 3) = m11*r3+m10, (3, 4) = m11, (4, 1) = m13*r3+m14*r2+m15*r1+m12, (4, 2) = m14*r3+m15*r2+m13, (4, 3) = m15*r3+m14, (4, 4) = m15}, datatype = anything, storage = rectangular, order = Fortran_order, shape = []
-				//
-				//
-				// M = -C*A_inv*B + D
-
-				// D =
-				// [ r0, r1, r2, r3]
-				// [  0, r0, r1, r2]
-				// [  0,  0, r0, r1]
-				// [  0,  0,  0, r0]
+				// M = -C A^{-1} B + D
 				std::vector<XNumT> M(16);	
 
-				M[0]  = -(w[1]*r3+w[2]*r2+w[3]*r1+w[0])		+ r0;
-				M[1]  = -(w[2]*r3+w[3]*r2+w[1])				+ r1;
-				M[2]  = -(w[3]*r3+w[2])						+ r2;
-				M[3]  = -(w[3])								+ r3;
+				M[15]  = -(w[14]*r3+w[13]*r2+w[12]*r1+w[15])	+ r0;
+				M[14]  = -(w[13]*r3+w[12]*r2+w[14])				+ r1;
+				M[13]  = -(w[12]*r3+w[13])						+ r2;
+				M[12]  = -(w[12])								+ r3;
 				//------------------------------------------
-				M[4]  = -(w[5]*r3+w[6]*r2+w[7]*r1+w[4]);
-				M[5]  = -(w[6]*r3+w[7]*r2+w[5])				+ r0;
-				M[6]  = -(w[7]*r3+w[6])						+ r1;
-				M[7]  = -(w[7])								+ r2;
+				M[11]  = -(w[10]*r3+w[9]*r2+w[8]*r1+w[11]);
+				M[10]  = -(w[9]*r3+w[8]*r2+w[10])				+ r0;
+				M[9]  = -(w[8]*r3+w[9])						+ r1;
+				M[8]  = -(w[8])								+ r2;
 				//------------------------------------------
-				M[8]  = -(w[10]*r2+w[11]*r1+w[9]*r3+w[8]);
-				M[9]  = -(w[10]*r3+w[11]*r2+w[9]);
-				M[10] = -(w[11]*r3+w[10])					+ r0;
-				M[11] = -(w[11])							+ r1;
+				M[7]  = -(w[5]*r2+w[4]*r1+w[6]*r3+w[7]);
+				M[6]  = -(w[5]*r3+w[4]*r2+w[6]);
+				M[5] = -(w[4]*r3+w[5])					+ r0;
+				M[4] = -(w[4])							+ r1;
 				//------------------------------------------
-				M[12] = -(w[13]*r3+w[14]*r2+w[15]*r1+w[12]);
-				M[13] = -(w[14]*r3+w[15]*r2+w[13]);
-				M[14] = -(w[15]*r3+w[14]);
-				M[15] = -(w[15])							+ r0;
+				M[3] = -(w[2]*r3+w[1]*r2+w[0]*r1+w[3]);
+				M[2] = -(w[1]*r3+w[0]*r2+w[2]);
+				M[1] = -(w[0]*r3+w[1]);
+				M[0] = -(w[0])							+ r0;
 				//------------------------------------------
 
 				// copy in the right hand side to a vector for the trailing 4x4 dense solve
 				//
 
-				// essentially c - C A_inv b
-				std::vector<XNumT> y(4);
-				y[0] = c1 -  (w[0]*b1 +  w[1]*b2 +  w[2]*b3 +  w[3]*b4);
-				y[1] = c2 -  (w[4]*b1 +  w[5]*b2 +  w[6]*b3 +  w[7]*b4);
-				y[2] = c3 -  (w[8]*b1 +  w[9]*b2 + w[10]*b3 + w[11]*b4);
-				y[3] = c4 - (w[12]*b1 + w[13]*b2 + w[14]*b3 + w[15]*b4);
+				// essentially b - C A_inv c
+				std::vector<XNumT> rhs_44(4);
+				rhs_44[0] = b1 -  (w[0]*c1 +  w[1]*c2 +  w[2]*c3 +  w[3]*c4);
+				rhs_44[1] = b2 -  (w[4]*c1 +  w[5]*c2 +  w[6]*c3 +  w[7]*c4);
+				rhs_44[2] = b3 -  (w[8]*c1 +  w[9]*c2 + w[10]*c3 + w[11]*c4);
+				rhs_44[3] = b4 - (w[12]*c1 + w[13]*c2 + w[14]*c3 + w[15]*c4);
 				
 				std::vector<XNumT> temp(4);
-				QuarticDenseLinear::Solve(temp, M,y);
+				QuarticDenseLinear::Solve(temp, M,rhs_44);
 
 				solution[4] = temp[0];
 				solution[5] = temp[1];
@@ -347,25 +300,22 @@ namespace nups {
 				const XNumT& y4 = temp[3];
 
 				// then finally compute the first four entries in the solution.  they're easy at this point
-				// Matrix(4, 1, {
-				//(1, 1) = b1-y1, 
-				//(2, 1) = -s3*(b1-y1)-r3*y1+b2-y2, 
-				//(3, 1) = (s3^2-s2)*(b1-y1)-s3*(-r3*y1+b2-y2)-r2*y1-r3*y2+b3-y3, 
-				//(4, 1) = (-s3^3+2*s2*s3-s1)*(b1-y1)+(s3^2-s2)*(-r3*y1+b2-y2)-s3*(-r2*y1-r3*y2+b3-y3)-r1*y1-r2*y2-r3*y3+b4-y4}, datatype = anything, storage = rectangular, order = Fortran_order, shape = [])
 
 				// we will re-use the following temporaries			
 				// const NumT z31 =  pow(s3,2)-s2;
 				// const NumT z41 = -pow(s3,3)+NumT(2)*s2*s3-s1;
 
-				const XNumT t1 = -y1*r3 + b2-y2;
-				const XNumT t2 = -y1*r2 - y2*r3 + b3-y3;
+				const XNumT t1 = -y4*r3 + c3-y3;
+				const XNumT t2 = -r2*y4 - r3*y3 + c2 - y2;
 
-				//      x = A^{-1}(b - B y)
+				//      x = A^{-1}(c - B y)
+				solution[3] = c4-y4;
 
-				solution[0] =  b1-y1;
-				solution[1] = -s3*solution[0] - r3*y1+b2-y2;
-				solution[2] = z31*solution[0] - s3*t1 + t2;
-				solution[3] = z41*solution[0] + z31*t1 - s3*t2 - r1*y1 - r2*y2 - r3*y3 + b4-y4;
+				solution[0] = -r1*y4-r2*y3-r3*y2+c1-y1 - s3*t2 + z31*t1 + z41*solution[3];
+				solution[1] = t2 - s3*t1 + z31*solution[3];
+				solution[2] = t1 - s3*solution[3];
+				
+				
 			}
 
 		};
