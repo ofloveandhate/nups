@@ -29,15 +29,17 @@ set(NUPS_SOURCES
 	)
 
 set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib)
-	
+set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
+
 include_directories("${PROJECT_BINARY_DIR}")
 
-IF (BUILD_SHARED_LIBS)
-	add_library(nups SHARED ${NUPS_HEADERS} ${NUPS_SOURCES})
-ELSE ()
-	add_library(nups STATIC ${NUPS_HEADERS} ${NUPS_SOURCES})
-ENDIF(BUILD_SHARED_LIBS)
+#IF (BUILD_SHARED_LIBS)
+#	add_library(nups SHARED ${NUPS_HEADERS} ${NUPS_SOURCES})
+#ELSE ()
+#	
+#ENDIF(BUILD_SHARED_LIBS)
 
+add_library(nups STATIC ${NUPS_HEADERS} ${NUPS_SOURCES})
 
 install(
 		TARGETS nups 
@@ -50,20 +52,49 @@ install(
 		DESTINATION "include/nups")
 
 
-enable_testing()
+
 IF (BUILD_TESTING)
+	enable_testing()
 	#Setup CMake to run tests
 	
-	#Prep for compiling against boost
-	find_package(BoostUnitTest COMPONENTS unit_test_framework REQUIRED)
-	include_directories (${BoostUnitTest_INCLUDE_DIRS})
+	#set(Boost_USE_STATIC_LIBS       ON)
+	#
+	#add_definitions(-DBOOST_ALL_NO_LIB)  # tell the Boost config system not to automatically select which libraries to link against.
+	
+	#set(Boost_NO_SYSTEM_PATHS 		true)
+	#set(Boost_USE_STATIC_LIBS 		ON)# CACHE BOOL "use static libraries from Boost")
+	set(Boost_USE_MULTITHREADED 	ON)
+	
+	#set(Boost_USE_STATIC_LIBS        OFF)
+	#set(Boost_USE_STATIC_RUNTIME     OFF)
+	add_definitions( -DBOOST_ALL_NO_LIB )
+	add_definitions( -DBOOST_ALL_DYN_LINK )
+	
+	if (WIN32)
+			# disable autolinking in boost
+		
 
+		# force all boost libraries to dynamic link (we already disabled
+		# autolinking, so I don't know why we need this, but we do!)
+		
+	endif()	
+	
+	
+	#Prep for compiling against boost
+	find_package(Boost REQUIRED
+				COMPONENTS 
+					unit_test_framework )
+	
+	INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
+	LINK_DIRECTORIES(${Boost_LIBRARY_DIRS})
+	
+	
+	
+	
 	add_executable(nups_test test/nups_test.cpp) 
-	target_link_libraries(nups_test ${BoostUnitTest_LIBRARIES} nups)
+	target_link_libraries(nups_test ${Boost_LIBRARIES} nups)
 	add_test(NUPS nups_test)
-ELSE ()
-	add_custom_target(test_print)
-	add_test(test_print "enable building the nups test by adding the argument to `cmake .. -DBUILD_TESTING`.  ensure you have Boost.UnitTest installed.")
+
 ENDIF(BUILD_TESTING)
 
 
