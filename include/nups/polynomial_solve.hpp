@@ -57,8 +57,11 @@ namespace nups {
 
 			You may put in a monic or non-monic polynomial to this function.
 			*/
-			template<typename CoeffT>
-			void Solve(std::vector<typename NumTraits<CoeffT>::ComplexType>& solutions, std::vector<CoeffT> const& coefficients)
+			template<typename CoeffT, template <typename, typename> class ContT, 
+					          			typename AllocC, //  = std::allocator<CoeffT>
+					          			typename AllocRC > // = std::allocator<typename NumTraits<CoeffT>::ComplexType>
+			void Solve(ContT<typename NumTraits<CoeffT>::ComplexType, AllocC>& solutions, 
+			           ContT<CoeffT, AllocRC> const& coefficients)
 			{
 				return SolveWithComplex(solutions, coefficients);
 			}
@@ -91,10 +94,15 @@ namespace nups {
 
 			\see SharpenNonMonic
 			*/
-			template<typename SolnT, typename CoeffT>
-			static void SharpenMonic(std::vector<SolnT>& solutions, std::vector<CoeffT> const& coeffs, double final_tolerance, unsigned max_iterations)
+			template<typename SolnT, typename CoeffT, 
+						template <typename, typename> class Cont1, typename Alloc1, // Alloc1 = std::allocator<SolnT>
+						template <typename, typename> class Cont2, typename Alloc2> // Alloc2 = std::allocator<CoeffT> 
+			static void SharpenMonic(Cont1<SolnT, Alloc1>& solutions, 
+			                         Cont2<CoeffT, Alloc2> const& coeffs, 
+			                         double final_tolerance, 
+			                         unsigned max_iterations)
 			{
-				for (typename std::vector<SolnT>::iterator iter=solutions.begin(); iter!=solutions.end(); ++iter)
+				for (typename Cont1<SolnT, Alloc1>::iterator iter=solutions.begin(); iter!=solutions.end(); ++iter)
 					for (unsigned int ii(0); ii<max_iterations; ++ii)
 					{
 						SolnT delta_x = EvaluatePolyMonic(*iter,coeffs)/EvaluateDerivMonic(*iter,coeffs);
