@@ -36,8 +36,7 @@ namespace nups {
 
 		template<typename T>
 		struct StartPointGenerator
-		{
-		};
+		{ };
 
 
 		template<int DegreeFactorR, int DegreeFactorS>
@@ -101,8 +100,7 @@ namespace nups {
 		{
 
 			FactorizerBase(unsigned num_steps, unsigned num_corrects_during, unsigned num_corrects_after) : num_steps_(num_steps), num_corrects_during_(num_corrects_during), num_corrects_after_(num_corrects_after)
-			{
-			}
+			{ }
 
 
 			/**
@@ -262,8 +260,6 @@ namespace nups {
 				}
 
 				return true;
-				// if (max_norm < 1e-15)
-					// std::cout << "reached numerical zero " << ++bla << " during\n";
 			}
 
 			/**
@@ -278,9 +274,6 @@ namespace nups {
 
 				PolyT::EvaluateHomotopy(residuals, x, a);
 
-				// for (unsigned ii=0; ii<PolyT::Degree; ++ii)
-				// 	residuals[ii] = -residuals[ii];
-
 				ContT<XNumT, Alloc1...> delta_x(PolyT::Degree);
 				PolyT::Predictor::LinSolver::Solve(delta_x, x, residuals);
 				
@@ -294,7 +287,6 @@ namespace nups {
 				}
 
 				return true;
-
 			}
 
 
