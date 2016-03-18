@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE(solve_random_octic_xxx_times)
 	#ifndef NO_RANDOM
 	srand((unsigned) time(NULL));
 	#endif
-	unsigned num_solves = 100;
+	unsigned num_solves = 10000;
 
 	std::clock_t start = std::clock();
    

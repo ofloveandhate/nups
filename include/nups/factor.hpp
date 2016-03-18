@@ -23,7 +23,7 @@
 #ifndef NUPS_FACTOR_HPP
 #define NUPS_FACTOR_HPP
 #include <iostream>
-#include <vector>
+
 #include <sstream>
 #include "type_traits.hpp"
 #include <stdexcept>
@@ -48,8 +48,10 @@ namespace nups {
 
 			\param[out] rs_start The generated start point
 			*/
-			template<typename NumT>
-			static void Generate(std::vector<NumT> & rs_start)
+			template<typename NumT, 
+								template <typename, typename...> class ContT, 
+			          			typename... Alloc>
+			static void Generate(ContT<NumT, Alloc...> & rs_start)
 			{
 				rs_start.resize(DegreeFactorR+DegreeFactorS);
 				for (unsigned ii(0); ii<DegreeFactorR+DegreeFactorS; ++ii)
@@ -66,8 +68,10 @@ namespace nups {
 
 			\param[out] rs_start The generated start point
 			*/
-			template<typename NumT>
-			static void Generate(std::vector<NumT> & rs_start)
+			template<typename NumT, 
+								template <typename, typename...> class ContT, 
+			          			typename... Alloc>
+			static void Generate(ContT<NumT, Alloc...> & rs_start)
 			{
 				rs_start.resize(DegreeFactorR+DegreeFactorS);
 				unsigned counter(0);
@@ -108,8 +112,12 @@ namespace nups {
 			\param[out] s The lower degree of the two output monics.
 			\param[int] p The input monic polynomial, which you want to factor.
 			*/
-			template<typename NumT>
-			void Factor(std::vector<typename NumTraits<NumT>::ComplexType> & r, std::vector<typename NumTraits<NumT>::ComplexType> & s, std::vector<NumT> const& p)
+			template<typename NumT, 
+								template <typename, typename...> class ContT, 
+			          			typename... Alloc1, typename... Alloc2>
+			void Factor(ContT<typename NumTraits<NumT>::ComplexType, Alloc1...> & r, 
+			            ContT<typename NumTraits<NumT>::ComplexType, Alloc1...> & s, 
+			            ContT<NumT, Alloc2...> const& p)
 			{
 				if (p.size()!=PolyT::Degree && p.size()!=PolyT::Degree+1)
 				{
@@ -122,9 +130,11 @@ namespace nups {
 
 				if (p.size()==PolyT::Degree+1)
 				{
-					std::vector<NumT> re_scaled_coefficients(PolyT::Degree);
-					for (unsigned ii = 0; ii < PolyT::Degree; ++ii)
-						re_scaled_coefficients[ii] = p[ii] / p[PolyT::Degree];
+					ContT<NumT, Alloc2...> re_scaled_coefficients(PolyT::Degree);
+					auto leading_coeff = p[PolyT::Degree];
+					unsigned ii=0;
+					for (auto& c : re_scaled_coefficients)
+						c = p[ii++] / leading_coeff;
 					// push off the factoring to the private function which assumes monic.
 					return static_cast< PolyT * >( this )->DoFactorMonic(r, s, re_scaled_coefficients);
 				}
@@ -145,20 +155,25 @@ namespace nups {
 			/**
 			\brief Factors a monic univariate polynomial into two lower-degree monic polynomials.
 			*/
-			template<typename NumT>
-			void DoFactorMonic(std::vector<typename NumTraits<NumT>::ComplexType> & r, std::vector<typename NumTraits<NumT>::ComplexType> & s, std::vector<NumT> const& a)
+			template<typename NumT, 
+								template <typename, typename...> class ContT, 
+			          			typename... Alloc1, typename... Alloc2>
+			void DoFactorMonic(ContT<typename NumTraits<NumT>::ComplexType, Alloc1...> & r, 
+			                   ContT<typename NumTraits<NumT>::ComplexType, Alloc1...> & s, 
+			                   ContT<NumT, Alloc2...> const& a)
 			{
 				typedef typename NumTraits<NumT>::RealType Real;
 				typedef typename NumTraits<NumT>::ComplexType Complex;
+				typedef ContT<typename NumTraits<NumT>::ComplexType, Alloc1...> CVT;
 
 				Real t(1);
 				Real delta_t(Real(-1)/num_steps_);
 
-				std::vector<Complex> delta_x(PolyT::Degree);
-				std::vector<Complex> x(PolyT::Degree);
-				std::vector<Complex> a_star(PolyT::Degree);
-				std::vector<Complex> a_star_minus_a(PolyT::Degree);
-				std::vector<Complex> residuals(PolyT::Degree);
+				CVT delta_x(PolyT::Degree);
+				CVT x(PolyT::Degree);
+				CVT a_star(PolyT::Degree);
+				CVT a_star_minus_a(PolyT::Degree);
+				CVT residuals(PolyT::Degree);
 
 
 
@@ -204,8 +219,12 @@ namespace nups {
 			}
 
 
-			template<typename NumT>
-			static void A_Star_Minus_A(std::vector<typename NumTraits<NumT>::ComplexType> & a_star_minus_a, std::vector<typename NumTraits<NumT>::ComplexType> & a_star, std::vector<NumT> const& a)
+			template<typename NumT, 
+								template <typename, typename...> class ContT, 
+			          			typename... Alloc1, typename... Alloc2>
+			static void A_Star_Minus_A(ContT<typename NumTraits<NumT>::ComplexType, Alloc1...> & a_star_minus_a,
+									   ContT<typename NumTraits<NumT>::ComplexType, Alloc1...> & a_star, 
+									   ContT<NumT, Alloc2...> const& a)
 			{	
 				a_star_minus_a.resize(PolyT::Degree);
 				for (unsigned ii=0; ii<PolyT::Degree; ++ii)
@@ -215,24 +234,28 @@ namespace nups {
 			/**
 			\return true if correction loop should terminate, false otherwise.
 			*/
-			template<typename NumT>
-			static bool Correct(std::vector<typename NumTraits<NumT>::ComplexType> & x, 
-			                    std::vector<NumT> const& a, 
-			                    std::vector<typename NumTraits<NumT>::ComplexType> const& a_star, 
+			template<typename NumT, 
+								template <typename, typename...> class ContT, 
+			          			typename... Alloc1, typename... Alloc2>
+			static bool Correct(ContT<typename NumTraits<NumT>::ComplexType, Alloc1...> & x, 
+			                    ContT<NumT, Alloc2...> const& a, 
+			                    ContT<typename NumTraits<NumT>::ComplexType, Alloc1...> const& a_star, 
 			                    typename NumTraits<NumT>::RealType const& t)
 			{
-				std::vector<typename NumTraits<NumT>::ComplexType> residuals(PolyT::Degree);
+				typedef ContT<typename NumTraits<NumT>::ComplexType, Alloc1...> CVT;
+
+				CVT residuals(PolyT::Degree);
 
 				PolyT::EvaluateHomotopy(residuals, x, a, a_star, t);
 
 
-				std::vector<typename NumTraits<NumT>::ComplexType> delta_x;
+				CVT delta_x(PolyT::Degree);
 				PolyT::Predictor::LinSolver::Solve(delta_x, x, residuals);
 
 				for (unsigned ii=0; ii<PolyT::Degree; ++ii)
 					x[ii] -= delta_x[ii];
 
-				for (typename std::vector<typename NumTraits<NumT>::ComplexType>::const_iterator iter = delta_x.begin(); iter!=delta_x.end(); ++iter)
+				for (auto iter = begin(delta_x); iter!= end(delta_x); ++iter)
 				{
 					if (abs(*iter) > NumTraits<NumT>::NewtonTerminationThreshold())
 						return false;
@@ -246,23 +269,25 @@ namespace nups {
 			/**
 			\return true if correction loop should terminate, false otherwise.
 			*/
-			template<typename ANumT, typename XNumT>
-			static bool Correct(std::vector<XNumT> & x, std::vector<ANumT> const& a)
+			template<typename ANumT, typename XNumT, 
+								template <typename, typename...> class ContT, 
+			          			typename... Alloc1, typename... Alloc2>
+			static bool Correct( ContT<XNumT, Alloc1...>& x, ContT<ANumT, Alloc2...> const& a)
 			{
-				std::vector<XNumT> residuals(PolyT::Degree);
+				ContT<XNumT, Alloc1...> residuals(PolyT::Degree);
 
 				PolyT::EvaluateHomotopy(residuals, x, a);
 
 				// for (unsigned ii=0; ii<PolyT::Degree; ++ii)
 				// 	residuals[ii] = -residuals[ii];
 
-				std::vector<XNumT> delta_x;
+				ContT<XNumT, Alloc1...> delta_x(PolyT::Degree);
 				PolyT::Predictor::LinSolver::Solve(delta_x, x, residuals);
 				
 				for (unsigned ii=0; ii<PolyT::Degree; ++ii)
 					x[ii] -= delta_x[ii];
 				
-				for (typename std::vector<typename NumTraits<XNumT>::ComplexType>::const_iterator iter = delta_x.begin(); iter!=delta_x.end(); ++iter)
+				for (auto iter = begin(delta_x); iter!= end(delta_x); ++iter)
 				{
 					if (abs(*iter) > NumTraits<XNumT>::NewtonTerminationThreshold())
 						return false;
@@ -302,13 +327,15 @@ namespace nups {
 			}
 
 
-			// THIS FUNCTION USES THE DECENDING COEFFICIENT ORDERING
-			template<typename NumT>
-			static void EvaluateF(std::vector<NumT> & f, std::vector<NumT> const& rs)
+
+			template<typename NumT, 
+								template <typename, typename...> class ContT, 
+			          			typename... Alloc>
+			static void EvaluateF(ContT<NumT, Alloc...> & f, ContT<NumT, Alloc...> const& rs)
 			{
 				f.resize(8);
 
-				const NumT& r3 = rs[3];//Reverse
+				const NumT& r3 = rs[3];
 				const NumT& r2 = rs[2];
 				const NumT& r1 = rs[1];
 				const NumT& r0 = rs[0];
@@ -329,8 +356,10 @@ namespace nups {
 				f[0] = r0*s0;
 			}
 
-			template<typename NumT>
-			static void EvaluateF(std::vector<NumT> & f, std::vector<NumT> const& r, std::vector<NumT> const& s)
+			template<typename NumT, 
+								template <typename, typename...> class ContT, 
+			          			typename... Alloc>
+			static void EvaluateF(ContT<NumT, Alloc...> & f, ContT<NumT, Alloc...> const& r, ContT<NumT, Alloc...> const& s)
 			{
 				f.resize(8);
 
@@ -358,8 +387,10 @@ namespace nups {
 			
 
 			// THIS FUNCTION USES THE DECENDING COEFFICIENT ORDERING
-			template<typename AStarNumT, typename ANumT>
-			static void EvaluateHomotopy(std::vector<AStarNumT> & f, std::vector<AStarNumT> const& rs, std::vector<ANumT> const& a, std::vector<AStarNumT> const& a_star, typename NumTraits<ANumT>::RealType const& t)
+			template<typename AStarNumT, typename ANumT, 
+								template <typename, typename...> class ContT, 
+			          			typename... Alloc1, typename... Alloc2>
+			static void EvaluateHomotopy(ContT<AStarNumT, Alloc1...> & f, ContT<AStarNumT, Alloc1...> const& rs, ContT<ANumT, Alloc2...> const& a, ContT<AStarNumT, Alloc1...> const& a_star, typename NumTraits<ANumT>::RealType const& t)
 			{	
 
 				typedef typename NumTraits<ANumT>::RealType Real;
@@ -385,8 +416,10 @@ namespace nups {
 			}
 
 			// THIS FUNCTION USES THE DECENDING COEFFICIENT ORDERING
-			template<typename XNumT, typename ANumT>
-			static void EvaluateHomotopy(std::vector<XNumT> & f, std::vector<XNumT> const& rs, std::vector<ANumT> const& a)
+			template<typename XNumT, typename ANumT, 
+								template <typename, typename...> class ContT, 
+			          			typename... Alloc1, typename... Alloc2>
+			static void EvaluateHomotopy(ContT<XNumT, Alloc1...> & f, ContT<XNumT, Alloc1...> const& rs, ContT<ANumT, Alloc2...> const& a)
 			{	
 				const XNumT& r3 = rs[3];
 				const XNumT& r2 = rs[2];

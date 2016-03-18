@@ -30,8 +30,10 @@ namespace nups {
 		template<typename PolyT>
 		struct LinearSolverBase
 		{
-			template<typename NumT>
-			static void Solve(std::vector<NumT> & solution, std::vector<NumT> const& variables, std::vector<NumT> const& rhs)
+			template<typename NumT, 
+								template <typename, typename...> class ContT, 
+			          			typename... Alloc>
+			static void Solve(ContT<NumT, Alloc...> & solution, ContT<NumT, Alloc...> const& variables, ContT<NumT, Alloc...> const& rhs)
 			{
 				return PolyT::DoSolve(solution, variables, rhs);
 			}
@@ -44,8 +46,10 @@ namespace nups {
 			// implemented using Sarrus' rule.
 			//
 			// M is input as a 16-length vector, but interpreted as a 4x4 matrix.  The first four entries are the top row, etc.
-			template<typename NumT>
-			static void DoSolve(std::vector<NumT> & x, std::vector<NumT> const& M, std::vector<NumT> const& B)
+			template<typename NumT, 
+								template <typename, typename...> class ContT, 
+			          			typename... Alloc>
+			static void DoSolve(ContT<NumT, Alloc...> & x, ContT<NumT, Alloc...> const& M, ContT<NumT, Alloc...> const& B)
 			{
 				#ifndef NUPS_DISABLE_ASSERTS
 				assert(M.size()==16 && "must have 16 coefficients for the solution of a dense 4x4 system");
@@ -159,8 +163,10 @@ namespace nups {
 
 			In this particular predictor, the matrix A is assumed to have a block structure.  The structure comes from the product \f$r \cdot s\f$, where \f$r\f$ and \f$s\f$ are monic quartic polynomials.  That is, the code here has specific instructions on how to solve the special linear system for the factoring of an octic monic univariate into two monic quartics
 			*/
-			template<typename XNumT, typename RHSNumT>
-			static void DoSolve(std::vector<XNumT> & solution, std::vector<XNumT> const& variables, std::vector<RHSNumT> const& rhs)
+			template<typename XNumT, typename RHSNumT, 
+								template <typename, typename...> class ContT, 
+			          			typename... Alloc1, typename... Alloc2>
+			static void DoSolve(ContT<XNumT, Alloc1...> & solution, ContT<XNumT, Alloc1...> const& variables, ContT<RHSNumT, Alloc2...> const& rhs)
 			{
 				if (variables.size()!=8)
 					throw std::runtime_error("there must be 8 variables in the input for octic linear solver");
@@ -227,7 +233,7 @@ namespace nups {
 				// compute $C A^{-1}$
 
 				// C A^{-1}
-				std::vector<XNumT> C_Ainv(16);
+				ContT<XNumT, Alloc1...> C_Ainv(16);
 				// C_Ainv = C A^{-1}
 				C_Ainv[15] = s0-s1*s3 + s2*z31 + s3*z41;
 				C_Ainv[14] = s1-s2*s3 + s3*z31;
@@ -250,10 +256,10 @@ namespace nups {
 				C_Ainv[0] = s0;
 				//---------------------------------------
 
-				const std::vector<XNumT>& w = C_Ainv;
+				const ContT<XNumT, Alloc1...>& w = C_Ainv;
 
 				// M = -C A^{-1} B + D
-				std::vector<XNumT> M(16);	
+				ContT<XNumT, Alloc1...> M(16);	
 
 				M[15]  = -(w[14]*r3+w[13]*r2+w[12]*r1+w[15])	+ r0;
 				M[14]  = -(w[13]*r3+w[12]*r2+w[14])				+ r1;
@@ -280,13 +286,13 @@ namespace nups {
 				//
 
 				// essentially b - C A_inv c
-				std::vector<XNumT> rhs_44(4);
+				ContT<XNumT, Alloc1...> rhs_44(4);
 				rhs_44[0] = b1 -  (w[0]*c1 +  w[1]*c2 +  w[2]*c3 +  w[3]*c4);
 				rhs_44[1] = b2 -  (w[4]*c1 +  w[5]*c2 +  w[6]*c3 +  w[7]*c4);
 				rhs_44[2] = b3 -  (w[8]*c1 +  w[9]*c2 + w[10]*c3 + w[11]*c4);
 				rhs_44[3] = b4 - (w[12]*c1 + w[13]*c2 + w[14]*c3 + w[15]*c4);
 				
-				std::vector<XNumT> temp(4);
+				ContT<XNumT, Alloc1...> temp(4);
 				QuarticDenseLinear::Solve(temp, M,rhs_44);
 
 				solution[4] = temp[0];
@@ -334,8 +340,10 @@ namespace nups {
 
 			In this particular predictor, the matrix A is assumed to have a block structure.  The structure comes from the product \f$r \cdot s\f$, where \f$r\f$ and \f$s\f$ are monic quartic polynomials.  That is, the code here has specific instructions on how to solve the special linear system for the factoring of an octic monic univariate into two monic quartics
 			*/
-			template<typename NumT>
-			static void DoSolve(std::vector<NumT> & solution, std::vector<NumT> const& variables, std::vector<NumT> const& rhs)
+			template<typename NumT, 
+								template <typename, typename...> class ContT, 
+			          			typename... Alloc>
+			static void DoSolve(ContT<NumT, Alloc...> & solution, ContT<NumT, Alloc...> const& variables, ContT<NumT, Alloc...> const& rhs)
 			{
 				
 			}
