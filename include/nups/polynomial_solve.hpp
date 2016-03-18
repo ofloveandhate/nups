@@ -28,7 +28,6 @@
 #include "nups/factor.hpp"
 #include "nups/predict.hpp"
 #include "nups/linear_solve.hpp"
-#include <vector>
 
 namespace nups {
 	namespace solver {
