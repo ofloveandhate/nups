@@ -220,6 +220,9 @@ namespace nups {
 				typedef typename NumTraits<CoeffT>::ComplexType Real;
 				typedef typename NumTraits<CoeffT>::ComplexType Complex;
 
+				if (coefficients.size()!=2)
+					throw std::runtime_error("solving a monic degree 2 polynomial requires 2 coefficients.");
+
 				solutions.resize(2);
 
 				Complex sqrt_discriminant = sqrt(pow(Complex(coefficients[1]),2) - Real(4)*Complex(coefficients[0]));
@@ -319,7 +322,7 @@ namespace nups {
 			\param corrects_during The number of Newton corrections taken after each step of the homotopy for the factorization.
 			\param corrects_after The number of Newton corrections taken after factorization, but before solution of the factored quartics.
 			*/
-			Octic(double final_tolerance, unsigned max_iterations_final = 10, unsigned steps = 10, unsigned corrects_during = 7, unsigned corrects_after = 10) : max_iterations_(max_iterations_final), final_tolerance_(final_tolerance), factorizer_(steps, corrects_during, corrects_after)
+			Octic(double final_tolerance, unsigned max_iterations_final = 5, unsigned steps = 3, unsigned corrects_during = 6, unsigned corrects_after = 6) : max_iterations_(max_iterations_final), final_tolerance_(final_tolerance), factorizer_(steps, corrects_during, corrects_after)
 			{
 			}
 
@@ -340,10 +343,11 @@ namespace nups {
 				if (coefficients.size()!=8)
 					throw std::runtime_error("solving a monic degree 8 polynomial requires 8 coefficients.");
 
-				std::vector<Complex> factor_coeffs_1, factor_coeffs_2;
-				factorizer_.Factor(factor_coeffs_1, factor_coeffs_2, coefficients);
+				std::vector<Complex> factor_coeffs_1(4), factor_coeffs_2(4);
+				std::vector<Complex> solns_temp_1(4), solns_temp_2(4);
 
-				std::vector<Complex> solns_temp_1, solns_temp_2;
+				factorizer_.Factor(factor_coeffs_1, factor_coeffs_2, coefficients);
+				
 				quartic_solver_.Solve(solns_temp_1, factor_coeffs_1);
 				quartic_solver_.Solve(solns_temp_2, factor_coeffs_2);
 
@@ -378,11 +382,11 @@ namespace nups {
 				if (coefficients.size()!=10)
 					throw std::runtime_error("solving a monic degree 10 polynomial requires 10 coefficients.");
 
-				std::vector<Complex> factor_coeffs_1, factor_coeffs_2;
+				std::vector<Complex> factor_coeffs_1(8), factor_coeffs_2(2);
 				factor::Decic<PredictorT,StartT>::Factor(factor_coeffs_1, factor_coeffs_2, coefficients);
 
 
-				std::vector<Complex> solns_temp_1, solns_temp_2;
+				std::vector<Complex> solns_temp_1(8), solns_temp_2(2);
 				octic_solver_.Solve(solns_temp_1, factor_coeffs_1);
 				quadratic_solver_.Solve(solns_temp_2, factor_coeffs_2);
 

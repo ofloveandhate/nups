@@ -118,20 +118,21 @@ namespace nups {
 					throw std::runtime_error(error_message.str());
 				}
 
-				std::vector<NumT> re_scaled_coefficients(PolyT::Degree);
+				
 
 				if (p.size()==PolyT::Degree+1)
 				{
+					std::vector<NumT> re_scaled_coefficients(PolyT::Degree);
 					for (unsigned ii = 0; ii < PolyT::Degree; ++ii)
 						re_scaled_coefficients[ii] = p[ii] / p[PolyT::Degree];
+					// push off the factoring to the private function which assumes monic.
+					return static_cast< PolyT * >( this )->DoFactorMonic(r, s, re_scaled_coefficients);
 				}
 				else
 				{
-					for (unsigned ii = 0; ii < PolyT::Degree; ++ii)
-						re_scaled_coefficients[ii] = p[ii];
+					return static_cast< PolyT * >( this )->DoFactorMonic(r, s, p);
 				}
-				// push off the factoring to the private function which assumes monic.
-				return static_cast< PolyT * >( this )->DoFactorMonic(r, s, re_scaled_coefficients);
+				
 
 			}
 

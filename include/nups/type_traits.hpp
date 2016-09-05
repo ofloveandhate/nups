@@ -55,7 +55,7 @@ namespace nups
 
 		static float NewtonTerminationThreshold() 
 		{
-			return 1e-5f;
+			return 1e-6f;
 		}
 	};
 
@@ -70,7 +70,7 @@ namespace nups
 
 		static double NewtonTerminationThreshold() 
 		{
-			return 1e-11;
+			return 1e-12;
 		}
 	};
 
@@ -83,7 +83,7 @@ namespace nups
 
 		static double NewtonTerminationThreshold() 
 		{
-			return 1e-11;
+			return 1e-12;
 		}
 	};
 
