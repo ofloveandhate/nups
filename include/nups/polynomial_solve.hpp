@@ -28,7 +28,6 @@
 #include "nups/factor.hpp"
 #include "nups/predict.hpp"
 #include "nups/linear_solve.hpp"
-#include <vector>
 
 namespace nups {
 	namespace solver {
@@ -57,8 +56,10 @@ namespace nups {
 
 			You may put in a monic or non-monic polynomial to this function.
 			*/
-			template<typename CoeffT>
-			void Solve(std::vector<typename NumTraits<CoeffT>::ComplexType>& solutions, std::vector<CoeffT> const& coefficients)
+			template<typename CoeffT, template <typename, typename...> class ContT, 
+					          			typename... AllocS, typename... AllocC > 
+			void Solve(ContT<typename NumTraits<CoeffT>::ComplexType, AllocS...>& solutions, 
+			           ContT<CoeffT, AllocC...> const& coefficients)
 			{
 				return SolveWithComplex(solutions, coefficients);
 			}
@@ -69,15 +70,17 @@ namespace nups {
 
 			\see SharpenMonic
 			*/
-			template<typename SolnT, typename CoeffT>
-			static void SharpenNonMonic(std::vector<SolnT>& solutions, std::vector<CoeffT> const& coeffs, double final_tolerance, unsigned max_iterations)
+			template<typename SolnT, typename CoeffT, 
+										template <typename, typename> class ContT, 
+					          			typename... AllocS, typename... AllocC >
+			static void SharpenNonMonic(ContT<SolnT, AllocS...>& solutions, ContT<CoeffT, AllocC...> const& coeffs, double final_tolerance, unsigned max_iterations)
 			{
 				
-				for (typename std::vector<SolnT>::iterator iter=solutions.begin(); iter!=solutions.end(); ++iter)
+				for (auto iter=solutions.begin(); iter!=solutions.end(); ++iter)
 				{	
 					for (unsigned int ii(0); ii<max_iterations; ++ii)
 					{
-						SolnT delta_x = EvaluatePolyNonMonic(*iter,coeffs)/EvaluateDerivNonMonic(*iter,coeffs);
+						auto delta_x = EvaluatePolyNonMonic(*iter,coeffs)/EvaluateDerivNonMonic(*iter,coeffs);
 						*iter -= delta_x;
 						if (abs(delta_x) < final_tolerance)
 							break;
@@ -91,13 +94,18 @@ namespace nups {
 
 			\see SharpenNonMonic
 			*/
-			template<typename SolnT, typename CoeffT>
-			static void SharpenMonic(std::vector<SolnT>& solutions, std::vector<CoeffT> const& coeffs, double final_tolerance, unsigned max_iterations)
+			template<typename SolnT, typename CoeffT, 
+						template <typename, typename...> class ContT, 
+						typename... Alloc1, typename... Alloc2>
+			static void SharpenMonic(ContT<SolnT, Alloc1...>& solutions, 
+			                         ContT<CoeffT, Alloc2...> const& coeffs, 
+			                         double final_tolerance, 
+			                         unsigned max_iterations)
 			{
-				for (typename std::vector<SolnT>::iterator iter=solutions.begin(); iter!=solutions.end(); ++iter)
+				for (auto iter= begin(solutions); iter!=end(solutions); ++iter)
 					for (unsigned int ii(0); ii<max_iterations; ++ii)
 					{
-						SolnT delta_x = EvaluatePolyMonic(*iter,coeffs)/EvaluateDerivMonic(*iter,coeffs);
+						auto delta_x = EvaluatePolyMonic(*iter,coeffs)/EvaluateDerivMonic(*iter,coeffs);
 						*iter -= delta_x;
 						if (abs(delta_x) < final_tolerance)
 							break;
@@ -110,11 +118,13 @@ namespace nups {
 			
 			\see EvaluatePolyMonic
 			*/
-			template<typename SolnT, typename CoeffT>
-			static SolnT EvaluatePolyNonMonic(SolnT const& x, std::vector<CoeffT> const& coeffs)
+			template<typename SolnT, typename CoeffT,
+						template <typename, typename...> class ContT, 
+						typename... Alloc1>
+			static SolnT EvaluatePolyNonMonic(SolnT const& x, ContT<CoeffT, Alloc1...> const& coeffs)
 			{
 				SolnT x_val(1), f(0);
-				for (typename std::vector<CoeffT>::const_iterator iter = coeffs.begin(); iter != coeffs.end(); ++iter)
+				for (auto iter = begin(coeffs); iter != end(coeffs); ++iter)
 				{
 					f += *iter * x_val;
 					x_val *= x;
@@ -129,11 +139,13 @@ namespace nups {
 
 			\see EvaluatePolyNonMonic
 			*/
-			template<typename SolnT, typename CoeffT>
-			static SolnT EvaluatePolyMonic(SolnT const& x, std::vector<CoeffT> const& coeffs)
+			template<typename SolnT, typename CoeffT,
+						template <typename, typename...> class ContT, 
+						typename... Alloc1>
+			static SolnT EvaluatePolyMonic(SolnT const& x, ContT<CoeffT, Alloc1...> const& coeffs)
 			{	
 				SolnT x_val(1), f(0);
-				for (typename std::vector<CoeffT>::const_iterator iter = coeffs.begin(); iter != coeffs.end(); ++iter)
+				for (auto iter = begin(coeffs); iter != end(coeffs); ++iter)
 				{
 					f += *iter * x_val;
 					x_val *= x;
@@ -143,13 +155,15 @@ namespace nups {
 			}
 
 
-			template<typename SolnT, typename CoeffT>
-			static SolnT EvaluateDerivNonMonic(SolnT & x, std::vector<CoeffT> const& coeffs)
+			template<typename SolnT, typename CoeffT,
+						template <typename, typename...> class ContT, 
+						typename... Alloc1>
+			static SolnT EvaluateDerivNonMonic(SolnT & x, ContT<CoeffT, Alloc1...> const& coeffs)
 			{
 				SolnT x_val(1), f(0);
 				typename NumTraits<SolnT>::RealType pre_factor(1);
 
-				for (typename std::vector<CoeffT>::const_iterator iter = coeffs.begin()+1; iter != coeffs.end(); ++iter)
+				for (auto iter = begin(coeffs)+1; iter != end(coeffs); ++iter)
 				{
 					f += *iter * x_val * pre_factor;
 					pre_factor++;
@@ -159,13 +173,15 @@ namespace nups {
 			}
 
 
-			template<typename SolnT, typename CoeffT>
-			static SolnT EvaluateDerivMonic(SolnT & x, std::vector<CoeffT> const& coeffs)
+			template<typename SolnT, typename CoeffT,
+						template <typename, typename...> class ContT, 
+						typename... Alloc1>
+			static SolnT EvaluateDerivMonic(SolnT & x, ContT<CoeffT, Alloc1...> const& coeffs)
 			{
 				SolnT x_val(1), f(0);
 				typename NumTraits<SolnT>::RealType pre_factor(1);
 
-				for (typename std::vector<CoeffT>::const_iterator iter = coeffs.begin()+1; iter != coeffs.end(); ++iter)
+				for (auto iter = begin(coeffs)+1; iter != end(coeffs); ++iter)
 				{
 					f += *iter * x_val * pre_factor;
 					pre_factor++;
@@ -180,8 +196,11 @@ namespace nups {
 		private:
 
 
-			template<typename CoeffT>
-			void SolveWithComplex(std::vector<typename NumTraits<CoeffT>::ComplexType>& solutions, std::vector<CoeffT> const& coefficients)
+			template<typename CoeffT,
+						template <typename, typename...> class ContT, 
+						typename... Alloc1, typename... Alloc2>
+			void SolveWithComplex(ContT<typename NumTraits<CoeffT>::ComplexType, Alloc1...>& solutions,
+								  ContT<CoeffT, Alloc2...> const& coefficients)
 			{
 
 				if (coefficients.size()!=degree+1 && coefficients.size()!=degree)
@@ -195,7 +214,7 @@ namespace nups {
 				//re-scale by the leading coefficient, which is the first coefficient by convention
 				if (coefficients.size()==degree+1)
 				{
-					std::vector<CoeffT> re_scaled_coefficients(degree);
+					ContT<CoeffT, Alloc2...> re_scaled_coefficients(degree);
 					for (unsigned ii = 0; ii < degree; ++ii)
 						re_scaled_coefficients[ii] = coefficients[ii] / coefficients[degree];
 
@@ -214,10 +233,12 @@ namespace nups {
 		struct Quadratic : public SolverBase<2, Quadratic>
 		{
 
-			template<typename CoeffT>
-			void SolveWithComplexMonic(std::vector<typename NumTraits<CoeffT>::ComplexType>& solutions, std::vector<CoeffT> const& coefficients)
+			template<typename CoeffT,
+						template <typename, typename...> class ContT, 
+						typename... Alloc1, typename... Alloc2>
+			void SolveWithComplexMonic(ContT<typename NumTraits<CoeffT>::ComplexType, Alloc1...>& solutions, ContT<CoeffT, Alloc2...> const& coefficients)
 			{	
-				typedef typename NumTraits<CoeffT>::ComplexType Real;
+				typedef typename NumTraits<CoeffT>::RealType Real;
 				typedef typename NumTraits<CoeffT>::ComplexType Complex;
 
 				if (coefficients.size()!=2)
@@ -238,10 +259,12 @@ namespace nups {
 		*/
 		struct Quartic : public SolverBase<4, Quartic>
 		{
-			template<typename CoeffT>
-			void SolveWithComplexMonic(std::vector<typename NumTraits<CoeffT>::ComplexType>& solutions, std::vector<CoeffT> const& coefficients)
+			template<typename CoeffT,
+						template <typename, typename...> class ContT, 
+						typename... Alloc1>
+			void SolveWithComplexMonic(ContT<typename NumTraits<CoeffT>::ComplexType, Alloc1...>& solutions, ContT<CoeffT, Alloc1...> const& coefficients)
 			{	
-				typedef typename NumTraits<CoeffT>::ComplexType Real;
+				typedef typename NumTraits<CoeffT>::RealType Real;
 				typedef typename NumTraits<CoeffT>::ComplexType Complex;
 
 				if (coefficients.size()!=4)
@@ -332,19 +355,20 @@ namespace nups {
 
 			Intended to be called from the base solver, but you can call it yourself if you need to
 			*/
-			template<typename CoeffT>
-			void SolveWithComplexMonic(std::vector<typename NumTraits<CoeffT>::ComplexType>& solutions, std::vector<CoeffT> const& coefficients)
+			template<typename CoeffT,
+						template <typename, typename...> class ContT, 
+						typename... Alloc1, typename... Alloc2>
+			void SolveWithComplexMonic(ContT<typename NumTraits<CoeffT>::ComplexType, Alloc1...>& solutions, ContT<CoeffT, Alloc2...> const& coefficients)
 			{	
 
-				typedef typename NumTraits<CoeffT>::ComplexType Real;
 				typedef typename NumTraits<CoeffT>::ComplexType Complex;
 
 
 				if (coefficients.size()!=8)
 					throw std::runtime_error("solving a monic degree 8 polynomial requires 8 coefficients.");
 
-				std::vector<Complex> factor_coeffs_1(4), factor_coeffs_2(4);
-				std::vector<Complex> solns_temp_1(4), solns_temp_2(4);
+				ContT<Complex, Alloc1...> factor_coeffs_1(4), factor_coeffs_2(4);
+				ContT<Complex, Alloc1...> solns_temp_1(4), solns_temp_2(4);
 
 				factorizer_.Factor(factor_coeffs_1, factor_coeffs_2, coefficients);
 				
@@ -373,20 +397,22 @@ namespace nups {
 				 template<int,int> class StartT = nups::factor::UnitCoefficient>
 		struct Decic : public SolverBase<10, Decic<PredictorT,StartT> >
 		{
-			template<typename CoeffT>
-			void SolveWithComplexMonic(std::vector<typename NumTraits<CoeffT>::ComplexType>& solutions, std::vector<CoeffT> const& coefficients)
+			template<typename CoeffT,
+						template <typename, typename...> class ContT, 
+						typename... Alloc1, typename... Alloc2>
+			void SolveWithComplexMonic(ContT<typename NumTraits<CoeffT>::ComplexType, Alloc1...>& solutions, ContT<CoeffT, Alloc2...> const& coefficients)
 			{	
-				typedef typename NumTraits<CoeffT>::ComplexType Real;
+				typedef typename NumTraits<CoeffT>::RealType Real;
 				typedef typename NumTraits<CoeffT>::ComplexType Complex;
 
 				if (coefficients.size()!=10)
 					throw std::runtime_error("solving a monic degree 10 polynomial requires 10 coefficients.");
 
-				std::vector<Complex> factor_coeffs_1(8), factor_coeffs_2(2);
+				ContT<Complex, Alloc2...> factor_coeffs_1(8), factor_coeffs_2(2);
 				factor::Decic<PredictorT,StartT>::Factor(factor_coeffs_1, factor_coeffs_2, coefficients);
 
 
-				std::vector<Complex> solns_temp_1(8), solns_temp_2(2);
+				ContT<Complex, Alloc1...> solns_temp_1(8), solns_temp_2(2);
 				octic_solver_.Solve(solns_temp_1, factor_coeffs_1);
 				quadratic_solver_.Solve(solns_temp_2, factor_coeffs_2);
 
