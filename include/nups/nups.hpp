@@ -27,6 +27,8 @@
 #include "nups/polynomial_solve.hpp"
 #include "nups/linear_solve.hpp"
 #include "nups/predict.hpp"
+#include <nups_exports.h>
+
 
 extern "C"
 {
