@@ -33,8 +33,10 @@ namespace nups {
 		struct PredictorBase
 		{
 			
-			template<typename NumT>
-			static void Predict(std::vector<NumT> & delta_x, std::vector<NumT> const& x, std::vector<NumT> const& rhs, typename NumTraits<NumT>::RealType const& delta_t)
+			template<typename NumT, 
+								template <typename, typename...> class ContT, 
+			          			typename... Alloc>
+			static void Predict(ContT<NumT, Alloc...> & delta_x, ContT<NumT, Alloc...> const& x, ContT<NumT, Alloc...> const& rhs, typename NumTraits<NumT>::RealType const& delta_t)
 			{	
 				return PolyT::DoPredict(delta_x, x, rhs, delta_t);
 			}
@@ -49,8 +51,10 @@ namespace nups {
 			/**
 			First-order Euler predictor, using a linear solver provided as a template type.
 			*/
-			template<typename NumT>
-			static void DoPredict(std::vector<NumT> & delta_x, std::vector<NumT> const& x, std::vector<NumT> const& rhs, typename NumTraits<NumT>::RealType const& delta_t)
+			template<typename NumT, 
+								template <typename, typename...> class ContT, 
+			          			typename... Alloc>
+			static void DoPredict(ContT<NumT, Alloc...> & delta_x, ContT<NumT, Alloc...> const& x, ContT<NumT, Alloc...> const& rhs, typename NumTraits<NumT>::RealType const& delta_t)
 			{
 
 				// the euler step
@@ -74,10 +78,12 @@ namespace nups {
 			/**
 			Fourth-order Runge-Kutta predictor, using a linear solver provided as a template type.
 			*/
-			template<typename NumT>
-			static void DoPredict(std::vector<NumT> & delta_x, std::vector<NumT> const& x, std::vector<NumT> const& rhs, typename NumTraits<NumT>::RealType const& delta_t)
+			template<typename NumT, 
+								template <typename, typename...> class ContT, 
+			          			typename... Alloc>
+			static void DoPredict(ContT<NumT, Alloc...> & delta_x, ContT<NumT, Alloc...> const& x, ContT<NumT, Alloc...> const& rhs, typename NumTraits<NumT>::RealType const& delta_t)
 			{
-				std::vector<NumT> k1, k2, k3, k4;
+				ContT<NumT, Alloc...> k1, k2, k3, k4;
 
 				// get the first prediction, the euler step
 				LinearSolverT::Solve(k1, x, rhs);
@@ -85,7 +91,7 @@ namespace nups {
 
 				// use the k1 to compute k2.  
 				// use new space value x_2 = x+delta_t/2*k1
-				std::vector<NumT> x_2 = x;
+				ContT<NumT, Alloc...> x_2 = x;
 				for (unsigned ii=0; ii<LinearSolverT::Degree; ii++)
 					x_2[ii] += delta_t/NumT(2)*k1[ii];
 
@@ -125,17 +131,19 @@ namespace nups {
 			/**
 			Fifth-order Cash-Karp predictor, using a linear solver provided as a template type.
 			*/
-			template<typename NumT>
-			static void DoPredict(std::vector<NumT> & delta_x, std::vector<NumT> const& x, std::vector<NumT> const& rhs, typename NumTraits<NumT>::RealType const& delta_t)
+			template<typename NumT, 
+								template <typename, typename...> class ContT, 
+			          			typename... Alloc>
+			static void DoPredict(ContT<NumT, Alloc...> & delta_x, ContT<NumT, Alloc...> const& x, ContT<NumT, Alloc...> const& rhs, typename NumTraits<NumT>::RealType const& delta_t)
 			{
-				std::vector<NumT> k1, k2, k3, k4, k5, k6;
+				ContT<NumT, Alloc...> k1, k2, k3, k4, k5, k6;
 
 				// get the first prediction, the euler step
 				LinearSolverT::Solve(k1, x, rhs);
 
 
 				// use the k1 to compute k2.  
-				std::vector<NumT> x_2 = x;
+				ContT<NumT, Alloc...> x_2 = x;
 				for (unsigned ii=0; ii<LinearSolverT::Degree; ii++)
 					x_2[ii] += delta_t/NumT(5)*k1[ii];
 				LinearSolverT::Solve(k2, x_2, rhs);

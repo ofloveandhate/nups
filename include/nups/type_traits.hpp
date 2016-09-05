@@ -163,8 +163,10 @@ namespace nups
 
 
 
-	template<typename T>
-		void print_to_screen_matlab(std::vector<std::complex<T> > const& v, std::string const& name)
+	template<typename T, 
+				template <typename, typename...> class ContT, 
+      			typename... Alloc>
+		void print_to_screen_matlab(ContT<std::complex<T>, Alloc...> const& v, std::string const& name)
 		{	
 			std::cout.precision(16);
 			std::cout << name << " = [...\n";
@@ -175,8 +177,10 @@ namespace nups
 			std::cout << "];\n\n";
 		}
 
-		template<typename T>
-		void print_to_screen_matlab(std::vector<T> const& v, std::string const& name)
+		template<typename T, 
+				template <typename, typename...> class ContT, 
+      			typename... Alloc>
+		void print_to_screen_matlab(ContT<T, Alloc...> const& v, std::string const& name)
 		{	
 			std::cout.precision(16);
 			std::cout << name << " = [...\n";
