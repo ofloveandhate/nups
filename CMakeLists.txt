@@ -91,7 +91,10 @@ LINK_DIRECTORIES(${Boost_LIBRARY_DIRS} ${CMAKE_BINARY_DIR}/lib)
 
 
 set(NUPS_TEST_SOURCES
-	test/nups_test.cpp)
+	test/nups_test.cpp
+	test/common.cpp
+	test/using_valarrays.cpp
+	test/using_vectors.cpp)
 
 add_executable(nups_test ${NUPS_TEST_SOURCES}) 
 target_link_libraries(nups_test ${Boost_LIBRARIES} nups)
