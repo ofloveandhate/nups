@@ -1,3 +1,9 @@
+#useful defines:
+
+# -DCMAKE_GENERATOR_PLATFORM=x64 or =x86
+
+
+
 cmake_minimum_required (VERSION 3.4)
 project (nups)
 
@@ -70,34 +76,30 @@ install(
 		DESTINATION "include/nups")
 
 
+enable_testing()
+#Setup CMake to run tests
 
 
 
-IF (BUILD_TESTING)
-	enable_testing()
-	#Setup CMake to run tests
-	
+#Prep for compiling against boost
+find_package(Boost REQUIRED
+			COMPONENTS 
+				unit_test_framework )
 
-	
-	#Prep for compiling against boost
-	find_package(Boost REQUIRED
-				COMPONENTS 
-					unit_test_framework )
-	
-	INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
-	LINK_DIRECTORIES(${Boost_LIBRARY_DIRS} ${CMAKE_BINARY_DIR}/lib)
-	
-	
-	set(NUPS_TEST_SOURCES
-		test/nups_test.cpp)
-	
-	add_executable(nups_test ${NUPS_TEST_SOURCES}) 
-	target_link_libraries(nups_test ${Boost_LIBRARIES} nups)
+INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
+LINK_DIRECTORIES(${Boost_LIBRARY_DIRS} ${CMAKE_BINARY_DIR}/lib)
 
-	add_test(NAME nups_test 
-			COMMAND ${CMAKE_BINARY_DIR}/bin/nups_test)
 
-ENDIF(BUILD_TESTING)
+set(NUPS_TEST_SOURCES
+	test/nups_test.cpp)
+
+add_executable(nups_test ${NUPS_TEST_SOURCES}) 
+target_link_libraries(nups_test ${Boost_LIBRARIES} nups)
+
+add_test(NAME nups_test 
+		COMMAND ${CMAKE_BINARY_DIR}/bin/nups_test)
+
+
 
 
 
